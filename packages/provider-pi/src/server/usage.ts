@@ -1,3 +1,4 @@
+import type { UsageProviderKind } from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
@@ -51,103 +52,137 @@ const Entry = Schema.Union([
 ]);
 const decodeEntry = Schema.decodeUnknownOption(Entry);
 
-function parseRecord(parsed: unknown, state: typeof PiScanState.Type): readonly UsageRecord[] {
-  const decoded = decodeEntry(parsed);
-  if (Option.isNone(decoded)) return [];
-  const entry = decoded.value;
-  if (entry.type === "session") {
-    state.sessionId = entry.id;
-    return [];
-  }
-  const timestampMs = parseTimestampMs(entry.timestamp);
-  if (timestampMs === null) return [];
-  const source = entry.type === "message" ? entry.message : entry;
-  const usage = source.usage;
-  // Auxiliary tool/summary records lack model attribution; match Pi's breakdown.
-  const rateModel =
-    "model" in source
-      ? "responseModel" in source
-        ? (source.responseModel ?? source.model)
-        : source.model
-      : undefined;
-  const model = "provider" in source ? `${source.provider}/${rateModel}` : "Tools/summaries";
-  const outputTokens = tokenCount(usage.output);
-  const totals = {
-    // Pi's input/cache counters are already disjoint.
-    uncachedInputTokens: tokenCount(usage.input),
-    cachedInputTokens: tokenCount(usage.cacheRead),
-    cacheCreationTokens: tokenCount(usage.cacheWrite),
-    outputTokens,
-    reasoningTokens: Math.min(outputTokens, tokenCount(usage.reasoning)),
-  };
-  const cost = usage.cost?.total;
-  // Omitted Pi rates default to zero; use shared estimates without positive transcript cost.
-  const reportedCostUsd =
-    typeof cost === "number" && Number.isFinite(cost) && cost > 0 ? cost : null;
-  if (totalTokens(totals) === 0 && reportedCostUsd === null) return [];
-  return [
-    {
-      provider: "pi",
-      timestampMs,
-      model,
-      ...(rateModel === undefined ? {} : { rateModel }),
-      sessionId: state.sessionId,
-      totals,
-      reportedCostUsd,
-      speed: "standard",
-      // Forks preserve IDs/timestamps; short random IDs need timestamp/model to avoid cross-session collisions.
-      dedupeKey: JSON.stringify(["pi", entry.id, entry.timestamp, model]),
-    },
-  ];
-}
-
-export const piUsageFormat: TranscriptUsageFormat<typeof PiScanState.Type> = {
-  selectFields: {
-    type: true,
-    id: true,
-    timestamp: true,
-    provider: true,
-    model: true,
-    usage: true,
-    message: { role: true, provider: true, model: true, responseModel: true, usage: true },
-  },
-  usageMarkers: ['"usage"', '"session"'],
-  parseLine: (line, state) => {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(line);
-    } catch {
+function makeParseRecord(usageProvider: UsageProviderKind) {
+  return function parseRecord(
+    parsed: unknown,
+    state: typeof PiScanState.Type,
+  ): readonly UsageRecord[] {
+    const decoded = decodeEntry(parsed);
+    if (Option.isNone(decoded)) return [];
+    const entry = decoded.value;
+    if (entry.type === "session") {
+      state.sessionId = entry.id;
       return [];
     }
-    return parseRecord(parsed, state);
-  },
-  parseProjected: parseRecord,
-  state: { initial: () => ({ sessionId: "" }), schema: PiScanState },
-};
-
-export const piUsageReader: ProviderUsageReader<PiSettings, Path.Path> = {
-  kind: "transcripts",
-  provider: "pi",
-  format: piUsageFormat,
-  // Pi model IDs are `<provider>/<rate model>`.
-  rateModel: (model) => model.slice(model.indexOf("/") + 1),
-  directories: Effect.fn("piUsageReader.directories")(function* ({ config, environment }) {
-    const path = yield* Path.Path;
-    const home = yield* HostProcess.HomeDirectory;
-    const platform = yield* HostProcess.Platform;
-    const launchHome = piHome(environment, home, platform);
-    const sessionDirArg = config === undefined ? undefined : piLaunchSessionDir(config.launchArgs);
-    const launchDir =
-      sessionDirArg === undefined ? undefined : expandHomePath(sessionDirArg, launchHome);
-    // --session-dir moves only T3-launched sessions; terminal sessions stay in Pi's own directory.
+    const timestampMs = parseTimestampMs(entry.timestamp);
+    if (timestampMs === null) return [];
+    const source = entry.type === "message" ? entry.message : entry;
+    const usage = source.usage;
+    // Auxiliary tool/summary records lack model attribution; match Pi's breakdown.
+    const rateModel =
+      "model" in source
+        ? "responseModel" in source
+          ? (source.responseModel ?? source.model)
+          : source.model
+        : undefined;
+    const model = "provider" in source ? `${source.provider}/${rateModel}` : "Tools/summaries";
+    const outputTokens = tokenCount(usage.output);
+    const totals = {
+      // Pi's input/cache counters are already disjoint.
+      uncachedInputTokens: tokenCount(usage.input),
+      cachedInputTokens: tokenCount(usage.cacheRead),
+      cacheCreationTokens: tokenCount(usage.cacheWrite),
+      outputTokens,
+      reasoningTokens: Math.min(outputTokens, tokenCount(usage.reasoning)),
+    };
+    const cost = usage.cost?.total;
+    // Omitted Pi rates default to zero; use shared estimates without positive transcript cost.
+    const reportedCostUsd =
+      typeof cost === "number" && Number.isFinite(cost) && cost > 0 ? cost : null;
+    if (totalTokens(totals) === 0 && reportedCostUsd === null) return [];
     return [
-      ...(launchDir !== undefined && path.isAbsolute(launchDir)
-        ? [{ dir: path.resolve(launchDir) }]
-        : []),
-      { dir: resolvePiSessionsDir(environment, launchHome, path) },
+      {
+        provider: usageProvider,
+        timestampMs,
+        model,
+        ...(rateModel === undefined ? {} : { rateModel }),
+        sessionId: state.sessionId,
+        totals,
+        reportedCostUsd,
+        speed: "standard",
+        // Forks preserve IDs/timestamps; short random IDs need timestamp/model to avoid cross-session collisions.
+        dedupeKey: JSON.stringify([usageProvider, entry.id, entry.timestamp, model]),
+      },
     ];
-  }),
-};
+  };
+}
+
+function makePiUsageFormat(
+  usageProvider: UsageProviderKind,
+): TranscriptUsageFormat<typeof PiScanState.Type> {
+  const parseRecord = makeParseRecord(usageProvider);
+  return {
+    selectFields: {
+      type: true,
+      id: true,
+      timestamp: true,
+      provider: true,
+      model: true,
+      usage: true,
+      message: { role: true, provider: true, model: true, responseModel: true, usage: true },
+    },
+    usageMarkers: ['"usage"', '"session"'],
+    parseLine: (line, state) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(line);
+      } catch {
+        return [];
+      }
+      return parseRecord(parsed, state);
+    },
+    parseProjected: parseRecord,
+    state: { initial: () => ({ sessionId: "" }), schema: PiScanState },
+  };
+}
+
+export const piUsageFormat: TranscriptUsageFormat<typeof PiScanState.Type> =
+  makePiUsageFormat("pi");
+
+export function makePiUsageReader(options: {
+  readonly provider: UsageProviderKind;
+  readonly defaultAgentDirSegments: readonly [string, ...string[]];
+}): ProviderUsageReader<PiSettings, Path.Path> {
+  return {
+    kind: "transcripts",
+    provider: options.provider,
+    format: options.provider === "pi" ? piUsageFormat : makePiUsageFormat(options.provider),
+    // Pi/OMP model IDs are `<provider>/<rate model>`.
+    rateModel: (model) => model.slice(model.indexOf("/") + 1),
+    directories: Effect.fn(`${options.provider}UsageReader.directories`)(function* ({
+      config,
+      environment,
+    }) {
+      const path = yield* Path.Path;
+      const home = yield* HostProcess.HomeDirectory;
+      const platform = yield* HostProcess.Platform;
+      const launchHome = piHome(environment, home, platform);
+      const sessionDirArg =
+        config === undefined ? undefined : piLaunchSessionDir(config.launchArgs);
+      const launchDir =
+        sessionDirArg === undefined ? undefined : expandHomePath(sessionDirArg, launchHome);
+      // --session-dir moves only T3-launched sessions; terminal sessions stay in the agent's own directory.
+      return [
+        ...(launchDir !== undefined && path.isAbsolute(launchDir)
+          ? [{ dir: path.resolve(launchDir) }]
+          : []),
+        {
+          dir: resolvePiSessionsDir(
+            environment,
+            launchHome,
+            path,
+            options.defaultAgentDirSegments,
+          ),
+        },
+      ];
+    }),
+  };
+}
+
+export const piUsageReader: ProviderUsageReader<PiSettings, Path.Path> = makePiUsageReader({
+  provider: "pi",
+  defaultAgentDirSegments: [".pi", "agent"],
+});
 
 function piLaunchSessionDir(launchArgs: string): string | undefined {
   const resolved = resolvePiLaunchArgs(launchArgs);
@@ -176,12 +211,13 @@ export function resolvePiSessionsDir(
   environment: NodeJS.ProcessEnv,
   home: string,
   path: Path.Path,
+  defaultAgentDirSegments: readonly [string, ...string[]] = [".pi", "agent"],
 ): string {
   const sessionDir = environment.PI_CODING_AGENT_SESSION_DIR?.trim();
   if (sessionDir) return path.resolve(expandHomePath(sessionDir, home));
   const agentDir = environment.PI_CODING_AGENT_DIR?.trim();
   return path.resolve(
-    agentDir ? expandHomePath(agentDir, home) : path.join(home, ".pi", "agent"),
+    agentDir ? expandHomePath(agentDir, home) : path.join(home, ...defaultAgentDirSegments),
     "sessions",
   );
 }

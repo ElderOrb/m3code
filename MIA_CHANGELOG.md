@@ -5,6 +5,11 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: Add Oh My Pi (OMP) provider
+
+- **New `@t3tools/provider-omp` package**: first-class OMP (`omp --mode rpc`) provider reusing `@t3tools/provider-pi`'s JSONL RPC adapter and status/text-generation/usage engine with OMP defaults (`driver: "omp"`, `binaryPath: "omp"`, `~/.omp/agent/sessions` usage transcripts, `DO_NOT_TRACK=1`, zero trackers).
+- **Auto-detection & multi-surface wiring**: auto-enables `omp` when `omp` is on `PATH`, added to `packages/contracts`, `packages/client-runtime`, `apps/server`, `apps/web`, and `apps/mobile` (model picker, local model setup, custom model editor, and usage dashboard).
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
