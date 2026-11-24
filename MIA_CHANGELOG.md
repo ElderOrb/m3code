@@ -115,6 +115,11 @@ Fixed runtime and typecheck bugs on `main`:
 - **Electron renderer V8 bytecode cache**: enabled `v8CacheOptions: "bypassHeatCheck"` on the main `BrowserWindow` in `apps/desktop/src/window/DesktopWindow.ts` for faster cold starts.
 - **Zero-readback opaque & reduced-transparency CSS fast path**: set `data-glass-opaque="true"` at 100% glass opacity and honored `@media (prefers-reduced-transparency: reduce)` in `apps/web/src/index.css` to strip `backdrop-filter` completely instead of keeping `blur(0px) saturate(...)` compositor readback layers on macOS Retina.
 
+## 2026-11-24: Add Oh My Pi (OMP) provider
+
+- **New `@t3tools/provider-omp` package**: first-class OMP (`omp --mode rpc`) provider reusing `@t3tools/provider-pi`'s JSONL RPC adapter and status/text-generation/usage engine with OMP defaults (`driver: "omp"`, `binaryPath: "omp"`, `~/.omp/agent/sessions` usage transcripts, `DO_NOT_TRACK=1`, zero trackers).
+- **Auto-detection & multi-surface wiring**: auto-enables `omp` when `omp` is on `PATH`, added to `packages/contracts`, `packages/client-runtime`, `apps/server`, `apps/web`, and `apps/mobile` (model picker, local model setup, custom model editor, and usage dashboard).
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,

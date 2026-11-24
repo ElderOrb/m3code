@@ -16,6 +16,11 @@ export const PROVIDER_PRESENTATION = {
     color: "#4d9f8a",
     driverKind: ProviderDriverKind.make("pi"),
   },
+  omp: {
+    label: "OMP",
+    color: "#2ea8a0",
+    driverKind: ProviderDriverKind.make("omp"),
+  },
   opencode: {
     label: "OpenCode",
     color: "#5b9bbd",

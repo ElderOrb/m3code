@@ -155,6 +155,7 @@ const commandOnPath = (command: string) =>
 /** Agents that run local models, and how to tell one is on this machine. */
 const LOCAL_AGENT_DETECTORS: ReadonlyArray<LocalAgentDetector> = [
   { driver: ProviderDriverKind.make("pi"), found: commandOnPath("pi") },
+  { driver: ProviderDriverKind.make("omp"), found: commandOnPath("omp") },
   { driver: ProviderDriverKind.make("opencode"), found: commandOnPath("opencode") },
   { driver: ProviderDriverKind.make("noname"), found: noNameServerAnswers() },
 ];
