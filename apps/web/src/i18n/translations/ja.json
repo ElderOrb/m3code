@@ -10950,7 +10950,7 @@
   "e6d4dfcbbe956abf": "この環境を接続するには T3 Connect にサインインしてください。",
   "e6e55f343639ae71": "デフォルト ({mode})",
   "e6f93efffccbd441": "ホストの接続とネットワークアクセスを確認してから、再試行してください。デバイスの設定は保存されています。",
-  "e6fd69a8a3bb69e2": "モデル API APIキー OpenAI OpenRouter Anthropic Ollama LM Studio カスタム エンドポイント ベース URL スレッドタイトル コミットメッセージ model api",
+  "5e85e163a59abec5": "モデル API APIキー OpenAI OpenRouter LLM Gateway Anthropic Ollama LM Studio カスタム エンドポイント ベース URL スレッドタイトル コミットメッセージ model api",
   "e7018d0e5c5f7d75": "DPoP 公開キーをエクスポートできませんでした。",
   "e7194946af611278": "プレビュービルドを実行中",
   "e71bfc7a6006dca6": "このページを別のウィンドウで開いてください",

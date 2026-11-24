@@ -11000,7 +11000,7 @@
   "e6d4dfcbbe956abf": "Melde dich bei T3 Connect an, um diese Umgebung zu verbinden.",
   "e6e55f343639ae71": "Standard ({mode})",
   "e6f93efffccbd441": "Prüfe die Host-Verbindung und den Netzwerkzugriff und versuche es dann erneut. Deine Geräteeinstellungen sind gespeichert.",
-  "e6fd69a8a3bb69e2": "modell api api-schlüssel openai openrouter anthropic ollama lm studio eigener endpunkt basis-url thread-titel commit-nachrichten",
+  "5e85e163a59abec5": "modell api api-schlüssel openai openrouter llm gateway anthropic ollama lm studio eigener endpunkt basis-url thread-titel commit-nachrichten",
   "e7018d0e5c5f7d75": "Der öffentliche DPoP-Schlüssel konnte nicht exportiert werden.",
   "e7194946af611278": "verwendet einen Vorschau-Build",
   "e71bfc7a6006dca6": "Diese Seite in einem eigenen Fenster öffnen",

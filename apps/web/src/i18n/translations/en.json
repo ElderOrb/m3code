@@ -11010,7 +11010,7 @@
   "e6d4dfcbbe956abf": "Sign in to T3 Connect to connect this environment.",
   "e6e55f343639ae71": "Default ({mode})",
   "e6f93efffccbd441": "Check the host connection and network access, then retry. Your device settings are saved.",
-  "e6fd69a8a3bb69e2": "model api api key openai openrouter anthropic ollama lm studio custom endpoint base url thread titles commit messages",
+  "5e85e163a59abec5": "model api api key openai openrouter llm gateway anthropic ollama lm studio custom endpoint base url thread titles commit messages",
   "e7018d0e5c5f7d75": "Could not export DPoP public key.",
   "e7194946af611278": "runs a preview build",
   "e71bfc7a6006dca6": "Open this page in its own window",

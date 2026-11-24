@@ -11025,7 +11025,7 @@
   "e6d4dfcbbe956abf": "请登录 T3 Connect 以连接此环境。",
   "e6e55f343639ae71": "默认（{mode}）",
   "e6f93efffccbd441": "请检查主机连接和网络访问，然后重试。你的设备设置已保存。",
-  "e6fd69a8a3bb69e2": "模型 api api 密钥 openai openrouter anthropic ollama lm studio 自定义 端点 base url 会话标题 提交信息",
+  "5e85e163a59abec5": "模型 api api 密钥 openai openrouter llm gateway anthropic ollama lm studio 自定义 端点 base url 会话标题 提交信息",
   "e7018d0e5c5f7d75": "无法导出 DPoP 公钥。",
   "e7194946af611278": "运行的是预览版",
   "e71bfc7a6006dca6": "请在单独的窗口中打开此页面",

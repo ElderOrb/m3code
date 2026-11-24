@@ -11000,7 +11000,7 @@
   "e6d4dfcbbe956abf": "Entre no T3 Connect para conectar este ambiente.",
   "e6e55f343639ae71": "Padrão ({mode})",
   "e6f93efffccbd441": "Verifique a conexão com o host e o acesso à rede e tente novamente. As configurações do dispositivo estão salvas.",
-  "e6fd69a8a3bb69e2": "modelo api chave de api openai openrouter anthropic ollama lm studio endpoint personalizado url base títulos de threads mensagens de commit",
+  "5e85e163a59abec5": "modelo api chave de api openai openrouter llm gateway anthropic ollama lm studio endpoint personalizado url base títulos de threads mensagens de commit",
   "e7018d0e5c5f7d75": "Não foi possível exportar a chave pública DPoP.",
   "e7194946af611278": "roda uma build de pré-visualização",
   "e71bfc7a6006dca6": "Abra esta página em uma janela própria",

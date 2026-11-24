@@ -11008,7 +11008,7 @@
   "e6d4dfcbbe956abf": "Logga in på T3 Connect för att ansluta den här miljön.",
   "e6e55f343639ae71": "Standard ({mode})",
   "e6f93efffccbd441": "Kontrollera värdanslutningen och nätverksåtkomsten och försök sedan igen. Dina enhetsinställningar är sparade.",
-  "e6fd69a8a3bb69e2": "modell api api-nyckel openai openrouter anthropic ollama lm studio anpassad slutpunkt bas-url trådtitlar commit-meddelanden",
+  "5e85e163a59abec5": "modell api api-nyckel openai openrouter llm gateway anthropic ollama lm studio anpassad slutpunkt bas-url trådtitlar commit-meddelanden",
   "e7018d0e5c5f7d75": "Kunde inte exportera den publika DPoP-nyckeln.",
   "e7194946af611278": "kör en förhandsversion",
   "e71bfc7a6006dca6": "Öppna den här sidan i ett eget fönster",
