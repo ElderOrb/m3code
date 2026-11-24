@@ -5,6 +5,24 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: E2EE follow-ups after the first live run
+
+- **The host now has an identity key.** `ServerE2eeIdentity.layer` was never provided in
+  `server.ts`, so E2EE was inert in the real app (no fingerprint row, no key in pairing links).
+- **Record writes are serialized**, and the frame splitter now wraps the E2EE socket, so large
+  frames are still split before encryption.
+- **Switches show without T3 Connect**: they moved out of the T3 Connect row into
+  **Sharing & access → This machine**.
+- **Pairing links carry the key only while E2EE is on**, since a pin makes the client demand it.
+- **E2EE can be turned off from the UI**, with a warning that devices paired while it was on must
+  pair again.
+- **Script-import hardening** (shipped inside the E2EE commit): the t3.json import menu shows each
+  script's command and its `setup` / `on settle` badges before you import it. See
+  `docs/handoffs/2026-11-24-t3json-script-import-hardening.md`.
+- **Guide**: README section and `docs/user/encrypted-remote-control.md`.
+- **PR #3 merged**: Clerk, Expo OTA and the background upstream fetches are gone; the merge also
+  fixed the desktop startup layer, a mobile type, and a relay test it had left failing.
+
 ## 2026-11-24: End-to-end encrypted remote control (transport guard + app-layer E2EE)
 
 Two complementary protections for remote control, both opt-in and additive (the official T3 Code

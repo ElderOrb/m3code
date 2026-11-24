@@ -169,6 +169,19 @@ Linked providers send their requests through M3 Code, which:
 - Settings and thread states keep T3 Code's own pages and names (**Settled**, **Environments**,
   **Inference**), so the desktop and the phone read the same.
 
+### Encrypted remote control
+
+- **Two optional switches**, both in **Settings → Sharing & access** and both off by default:
+  **Private transports only** (refuse tunnels, proxies and plain LAN; allow this machine,
+  Tailscale and SSH) and **End-to-end encryption** (the session itself is encrypted and the
+  device checks the host's identity).
+- **To use encryption**: switch it on, press **Create link**, and pair each device from that
+  link. Devices paired earlier keep working, unencrypted, until you pair them again.
+- **Known limits**: file and image transfers are not covered, `t3 pair` links do not carry the
+  key yet, and turning it off disconnects devices paired while it was on. The official T3 Code mobile app keeps
+  working unless you set the mode to `require`.
+- See [Encrypted remote control](./docs/user/encrypted-remote-control.md).
+
 ### Appearance
 
 - **Dark** is two-tone: gray sidebar and panels over a near-black main area. The original

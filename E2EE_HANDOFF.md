@@ -36,8 +36,8 @@ This is a hard constraint — the `observability` compat key in
 | `apps/server/src/auth/http.ts` | Transport gate inside `layerAuthenticatedAuth` (covers every authenticated environment HTTP request). `serviceOption(ServerSettings)` so narrow test runtimes skip it. |
 | `apps/server/src/cloud/CloudLink.ts` | `CloudLinkTransportPolicyError`; guard in `applyRelayConfig`, `startManagedTunnelIfOriginConfirmed`, `reconcileDesiredLinkIfStillDesired`. |
 | `apps/server/src/cloud/http.ts` | Maps the new error tag to `EnvironmentHttpForbiddenError` in `connectErrorCases`. **Do not remove** — an unhandled tag there explodes the CLI's inferred requirements (§7). |
-| `apps/server/src/startupAccess.ts` | `buildPairingUrl(cs, token, { serverIdentityKey? })` embeds `pk` in the hash. |
-| `apps/server/src/cli/pair.ts` | `t3 pair` mints the identity key and embeds `pk`. |
+| `apps/server/src/startupAccess.ts` | `buildPairingUrl(cs, token, { serverIdentityKey? })` can embed `pk`, but no server caller passes it yet (see §6). |
+| `apps/server/src/cli/pair.ts` | `t3 pair` does **not** embed `pk` yet (§6). |
 | `packages/contracts/src/settings.ts` | `RemoteTransportPolicy`, `E2eeMode`, `ServerSettings.remoteTransportPolicy` + `e2eeMode`, patch fields (both route to `AuthAccessWriteScope` in `requiredScopesForServerSettingsPatch`). |
 | `packages/contracts/src/server.ts` | `TransportSecurity` struct + optional `ServerConfig.transportSecurity`. |
 | `packages/shared/src/remote.ts` | `pk` hash-param helpers (`getPairingServerKeyFromUrl`, `setPairingServerKeyOnUrl`); `ResolvedRemotePairingTarget.serverIdentityKey`. |
@@ -160,13 +160,19 @@ expected to polyfill it, but no device test ran.
 
 ## 6. Known gaps / deferred
 
+- **Wiring bug fixed after first live look:** `ServerE2eeIdentity.layer` was never provided
+  in `server.ts`, so the host had no identity key and E2EE was inert (no fingerprint row, no
+  `pk`). It is now provided there. Tests could not catch it because they build their own layers.
+- **Only web-UI pairing links carry `pk`.** `t3 pair` and the headless `t3 serve` startup URL do
+  not, so clients paired that way stay unpinned. The web link omits `pk` while `e2eeMode` is
+  `off`: a pin makes the client demand E2EE and the host would refuse it (`E2EE_NOT_SUPPORTED`).
+
 - **Attachment/file HTTP endpoints** are outside the E2EE tunnel; they remain
   protected by the transport only. The plan's preferred fix (stream chunks over
   the WS RPC) was not built.
 - **Rotate-key button** and **`require`-mode UI selection** deferred. The UI
-  switch only sets `prefer`; turning E2EE off from the UI is intentionally
-  blocked with a toast pointing at `settings.json` (a pinned client breaks
-  otherwise). `require` = set `e2eeMode: "require"` in `settings.json`.
+  switch only sets `prefer`; turning E2EE off from the UI is allowed but shows a
+  warning toast (a pinned client fails to connect until re-paired). `require` = set `e2eeMode: "require"` in `settings.json`.
 - **Mobile badge is transport-level only** (summaries carry no route profiles,
   so the `e2ee-app` badge is web/desktop).
 - **TOFU**: pins persist only when the pairing link carried `pk`. A client that
