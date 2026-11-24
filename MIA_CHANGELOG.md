@@ -5,6 +5,12 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: Disable Clerk SDK telemetry & purge final telemetry remnants
+
+- **Clerk SDK telemetry disabled**: passed `telemetry={false}` to every `<ClerkProvider>` (`apps/web` browser & Electron shells, `apps/mobile` `CloudAuthProvider`) and `telemetry: { disabled: true }` to every `createClerkClient` call in `infra/relay`, preventing default telemetry beacons to `clerk-telemetry.com`.
+- **Orphaned telemetry i18n strings**: removed 10 unused OTLP/trace-diagnostics translation keys across all 10 web locales and 3 unused crash-report translation keys across all 10 mobile locales.
+- **Dead telemetry references**: removed the stale `OtlpEndpointCheck.test.ts` entry from `apps/server/src/testUtils/shardWeights.json`, the dead `RpcInstrumentation.ts` link from `docs/internals/effect-services.md`, and the stale client-analytics comment in `Orchestrator.control-reads.test.ts`.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
