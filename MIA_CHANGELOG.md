@@ -5,6 +5,10 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: Direct WireGuard / mesh network exposure without Tailscale
+
+- **Tailscale-free mesh endpoints**: `DesktopServerExposure` now detects active WireGuard and direct mesh/VPN interfaces (`wg*`, `utun*`, `tun*`, `tap*`, `nebula*`, `zt*`) in network-accessible mode and advertises them as first-class `Direct mesh (<iface>)` pairing/connection endpoints alongside the LAN address, without requiring Tailscale or T3 Connect.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,

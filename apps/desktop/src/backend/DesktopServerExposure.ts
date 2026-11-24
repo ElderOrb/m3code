@@ -62,6 +62,16 @@ const DESKTOP_MANUAL_ENDPOINT_PROVIDER: AdvertisedEndpointProvider = {
   isAddon: false,
 };
 
+const DESKTOP_MESH_ENDPOINT_PROVIDER: AdvertisedEndpointProvider = {
+  id: "direct-mesh",
+  label: "Direct mesh",
+  kind: "core",
+  isAddon: false,
+};
+
+// WireGuard and direct mesh/VPN interfaces reachable across networks without Tailscale.
+const DIRECT_MESH_INTERFACE = /^(wg\d*|utun\d+|tun\d+|tap\d+|nebula\d*|zt[a-z0-9]+)/i;
+
 const normalizeOptionalHost = (value: string | undefined): string | undefined => {
   const normalized = value?.trim();
   return normalized && normalized.length > 0 ? normalized : undefined;
@@ -204,6 +214,45 @@ const resolveDesktopCoreAdvertisedEndpoints = (
         }),
       );
     } catch {}
+  }
+
+  return endpoints;
+};
+
+const resolveDirectMeshAdvertisedEndpoints = (input: {
+  readonly port: number;
+  readonly networkInterfaces: DesktopNetworkInterfaces.NetworkInterfaces;
+  readonly primaryLanHost: string | null;
+}): readonly AdvertisedEndpoint[] => {
+  const seenAddresses = new Set<string>(input.primaryLanHost ? [input.primaryLanHost] : []);
+  const endpoints: AdvertisedEndpoint[] = [];
+
+  for (const [name, addresses] of Object.entries(input.networkInterfaces)) {
+    if (!DIRECT_MESH_INTERFACE.test(name)) continue;
+    for (const entry of addresses ?? []) {
+      if (
+        entry.internal ||
+        entry.family !== "IPv4" ||
+        !isUsableLanIpv4Address(entry.address) ||
+        seenAddresses.has(entry.address)
+      ) {
+        continue;
+      }
+      seenAddresses.add(entry.address);
+      const httpBaseUrl = `http://${entry.address}:${input.port}`;
+      endpoints.push(
+        createAdvertisedEndpoint({
+          id: `desktop-mesh:${name}:${httpBaseUrl}`,
+          label: `Direct mesh (${name})`,
+          httpBaseUrl,
+          reachability: "lan",
+          status: "available",
+          provider: DESKTOP_MESH_ENDPOINT_PROVIDER,
+          source: "desktop-core",
+          description: `Reachable over WireGuard or direct mesh interface ${name} without Tailscale.`,
+        }),
+      );
+    }
   }
 
   return endpoints;
@@ -615,6 +664,15 @@ export const make = Effect.gen(function* () {
       return coreEndpoints;
     }
 
+    const meshEndpoints =
+      state.mode === "network-accessible"
+        ? resolveDirectMeshAdvertisedEndpoints({
+            port: state.port,
+            networkInterfaces: currentNetworkInterfaces,
+            primaryLanHost: Option.getOrNull(state.advertisedHost),
+          })
+        : [];
+
     const tailscaleEndpoints = yield* resolveTailscaleAdvertisedEndpoints({
       port: state.port,
       serveEnabled: state.tailscaleServeEnabled,
@@ -628,7 +686,7 @@ export const make = Effect.gen(function* () {
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, childProcessSpawner),
       Effect.provideService(HttpClient.HttpClient, httpClient),
     );
-    return [...coreEndpoints, ...tailscaleEndpoints];
+    return [...coreEndpoints, ...meshEndpoints, ...tailscaleEndpoints];
   }).pipe(Effect.withSpan("desktop.serverExposure.getAdvertisedEndpoints"));
 
   return DesktopServerExposure.of({
