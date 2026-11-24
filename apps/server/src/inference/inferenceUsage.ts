@@ -218,19 +218,57 @@ function readEvent(api: InferenceApi, event: unknown, tally: Tally): boolean {
   }
 }
 
-function readBody(api: InferenceApi, body: unknown, tally: Tally) {
+function readBody(api: InferenceApi, body: unknown, tally: Tally): boolean {
+  if (!isRecord(body)) return false;
   const usage = field(body, "usage");
   if (api === "responses") {
     readResponsesUsage(usage, tally);
     readResponseId(body, tally);
-  } else if (api === "messages") readAnthropicUsage(usage, tally);
-  else readOpenAiUsage(usage, tally);
-  const bodyEvent =
-    api === "messages" && isRecord(body) && body.stop_reason !== undefined
-      ? { ...body, type: "message_stop" }
-      : body;
-  const content = readEvent(api, bodyEvent, tally);
-  if (content) sawContent = true;
+    if (
+      body.status === "completed" ||
+      body.status === "incomplete" ||
+      body.status === "failed"
+    ) {
+      tally.terminal = true;
+    }
+    if (nonEmpty(body.output_text)) return true;
+    if (Array.isArray(body.output) && body.output.length > 0) return true;
+    return readEvent(api, body, tally);
+  }
+  if (api === "messages") {
+    readAnthropicUsage(usage, tally);
+    if (typeof body.stop_reason === "string" && body.stop_reason.length > 0) {
+      tally.terminal = true;
+    }
+    if (Array.isArray(body.content)) {
+      return body.content.some(
+        (block) =>
+          isRecord(block) &&
+          (nonEmpty(block.text) ||
+            nonEmpty(block.thinking) ||
+            block.type === "tool_use" ||
+            block.type === "server_tool_use"),
+      );
+    }
+    return false;
+  }
+  readOpenAiUsage(usage, tally);
+  const choices = Array.isArray(body.choices) ? body.choices : [];
+  if (choices.some((choice) => typeof field(choice, "finish_reason") === "string")) {
+    tally.terminal = true;
+  }
+  if (api === "completions") {
+    return choices.some((choice) => nonEmpty(field(choice, "text")));
+  }
+  return choices.some((choice) => {
+    const message = field(choice, "message") ?? field(choice, "delta");
+    return (
+      nonEmpty(field(message, "content")) ||
+      nonEmpty(field(message, "reasoning_content")) ||
+      nonEmpty(field(message, "reasoning")) ||
+      nonEmpty(field(message, "tool_calls"))
+    );
+  });
 }
 
 /**
@@ -311,7 +349,7 @@ export function makeUsageMeter(
       if (!skippingLine) readLine((pending + rest).trim());
     } else if (!bodyTooLarge && pending.length + rest.length <= MAX_BODY_CHARS) {
       const body = parseJson(pending + rest);
-      readBody(api, body, tally);
+      if (readBody(api, body, tally)) sawContent = true;
       errorBody = body;
     }
     pending = "";
