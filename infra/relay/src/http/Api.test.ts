@@ -9,7 +9,6 @@ import * as RelayTokens from "../auth/RelayTokens.ts";
 import * as Devices from "../agentActivity/Devices.ts";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Effect's Crypto has no generateKeyPairSync.
 import * as NodeCrypto from "node:crypto";
-import { createClerkClient, verifyToken } from "@clerk/backend";
 import * as NodeHttpPlatform from "@effect/platform-node/NodeHttpPlatform";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
@@ -64,11 +63,6 @@ import * as ManagedTunnelLimits from "../environments/ManagedTunnelLimits.ts";
 import * as AgentActivityPublisher from "../agentActivity/AgentActivityPublisher.ts";
 import * as EnvironmentPublishSignatures from "../environments/EnvironmentPublishSignatures.ts";
 import * as T3ChatAccounts from "../t3chat/T3ChatAccounts.ts";
-
-vi.mock("@clerk/backend", () => ({
-  createClerkClient: vi.fn(),
-  verifyToken: vi.fn(),
-}));
 
 const relaySettings: RelayConfiguration.RelayConfiguration["Service"] = {
   relayIssuer: "https://relay.example.test",
@@ -383,58 +377,13 @@ describe("Cloudflare rate-limit retry hint", () => {
 });
 
 describe("relay client authentication", () => {
-  it.effect("preserves the existing Clerk session JWT path", () =>
+  it.effect("rejects Clerk bearer tokens since Clerk has been removed", () =>
     Effect.gen(function* () {
-      vi.mocked(verifyToken).mockResolvedValue({
-        sub: "user_session",
-        aud: relaySettings.clerkJwtAudience,
-      } as never);
-
-      expect(yield* verifyRelayClientBearerToken(relaySettings, "session-token")).toEqual({
-        sub: "user_session",
-        mode: "clerk_session_bearer",
-      });
-      expect(verifyToken).toHaveBeenCalledWith("session-token", {
-        secretKey: "clerk-secret-key",
-        audience: relaySettings.clerkJwtAudience,
-      });
-      expect(createClerkClient).not.toHaveBeenCalled();
-    }).pipe(
-      Effect.ensuring(
-        Effect.sync(() => {
-          vi.mocked(verifyToken).mockReset();
-          vi.mocked(createClerkClient).mockReset();
-        }),
-      ),
-    ),
-  );
-
-  it.effect("falls back to Clerk OAuth token verification for the headless CLI", () =>
-    Effect.gen(function* () {
-      vi.mocked(verifyToken).mockRejectedValue(new Error("not a session JWT"));
-      vi.mocked(createClerkClient).mockReturnValue({
-        authenticateRequest: vi.fn().mockResolvedValue({
-          isAuthenticated: true,
-          toAuth: () => ({ userId: "user_oauth" }),
-        }),
-      } as never);
-
-      expect(yield* verifyRelayClientBearerToken(relaySettings, "oauth-token")).toEqual({
-        sub: "user_oauth",
-        mode: "clerk_oauth_bearer",
-      });
-      expect(createClerkClient).toHaveBeenCalledWith({
-        secretKey: "clerk-secret-key",
-        publishableKey: "pk_test_test",
-      });
-    }).pipe(
-      Effect.ensuring(
-        Effect.sync(() => {
-          vi.mocked(verifyToken).mockReset();
-          vi.mocked(createClerkClient).mockReset();
-        }),
-      ),
-    ),
+      const result = yield* Effect.exit(
+        verifyRelayClientBearerToken(relaySettings, "session-token"),
+      );
+      expect(result._tag).toBe("Failure");
+    }),
   );
 });
 
@@ -1454,9 +1403,7 @@ describe("relay CORS", () => {
 
         expect(response.status).toBe(500);
         expect(response.headers["access-control-allow-origin"]).toBe("*");
-        expect(response.headers["access-control-expose-headers"]).toBe(
-          "traceparent,www-authenticate",
-        );
+        expect(response.headers["access-control-expose-headers"]).toBe("www-authenticate");
       }
     }).pipe(Effect.scoped),
   );

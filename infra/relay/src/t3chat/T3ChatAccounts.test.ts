@@ -11,13 +11,6 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as RelayConfiguration from "../Config.ts";
 import * as T3ChatAccounts from "./T3ChatAccounts.ts";
 
-const clerk = vi.hoisted(() => ({
-  getUser: async (): Promise<unknown> => ({ primaryEmailAddress: { emailAddress: "a@b.co" } }),
-}));
-vi.mock("@clerk/backend", () => ({
-  createClerkClient: () => ({ users: { getUser: () => clerk.getUser() } }),
-}));
-
 const SECRET = "shared-link-secret";
 
 const relaySettings = (
@@ -75,40 +68,6 @@ const provide = (
   );
 
 describe("T3ChatAccounts", () => {
-  it.effect("signs link tokens in the format T3 Chat verifies", () =>
-    Effect.gen(function* () {
-      const accounts = yield* T3ChatAccounts.T3ChatAccounts;
-      const url = new URL(yield* accounts.createLinkUrl({ userId: "user_1" }));
-      expect(`${url.origin}${url.pathname}`).toBe("https://chat.example.test/link/t3code");
-
-      const [payload = "", signature = ""] = (url.searchParams.get("token") ?? "").split(".");
-      // Verify with Web Crypto, as T3 Chat does, rather than the signing library.
-      const verified = yield* Effect.promise(async () => {
-        const encoder = new TextEncoder();
-        const key = await crypto.subtle.importKey(
-          "raw",
-          encoder.encode(SECRET),
-          { name: "HMAC", hash: "SHA-256" },
-          false,
-          ["verify"],
-        );
-        return crypto.subtle.verify(
-          "HMAC",
-          key,
-          Buffer.from(signature, "base64url"),
-          encoder.encode(payload),
-        );
-      });
-      expect(verified).toBe(true);
-      expect(JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))).toEqual({
-        v: 1,
-        sub: "user_1",
-        email: "a@b.co",
-        exp: 600,
-      });
-    }).pipe(provide(fakeT3Chat({}).client)),
-  );
-
   it.effect("asks T3 Chat for the link with the shared secret", () => {
     const t3Chat = fakeT3Chat({ link: { email: "theo@t3.chat", plan: "premier", linkedAt: 1 } });
     return Effect.gen(function* () {
@@ -151,16 +110,10 @@ describe("T3ChatAccounts", () => {
     }).pipe(provide(client));
   });
 
-  it.effect("times out when Clerk stalls on the email lookup", () =>
+  it.effect("fails Clerk email lookup since Clerk has been removed", () =>
     Effect.gen(function* () {
-      const getUser = clerk.getUser;
-      clerk.getUser = () => new Promise(() => {});
       const accounts = yield* T3ChatAccounts.T3ChatAccounts;
-      const fiber = yield* Effect.forkChild(Effect.flip(accounts.createLinkUrl({ userId: "u" })));
-      yield* TestClock.adjust("5 seconds");
-      const error = yield* Fiber.join(fiber).pipe(
-        Effect.ensuring(Effect.sync(() => (clerk.getUser = getUser))),
-      );
+      const error = yield* Effect.flip(accounts.createLinkUrl({ userId: "u" }));
       expect(error._tag).toBe("ClerkUserLookupFailed");
     }).pipe(provide(fakeT3Chat({}).client)),
   );

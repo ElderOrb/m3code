@@ -1,5 +1,5 @@
 import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
-import { useAuth } from "@clerk/react";
+import { useCloudAuth as useAuth } from "../../cloud/managedAuth";
 import { useAtomValue } from "@effect/atom-react";
 import {
   managedCapabilityDenial,

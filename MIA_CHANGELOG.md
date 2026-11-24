@@ -56,6 +56,13 @@ mobile app keeps pairing and working; defaults are `remoteTransportPolicy: "any"
   protected by the transport); the web/mobile "require" mode selection and a rotate-key button are
   deferred - rotation today = delete `e2ee-identity-seed-v1` + restart.
 
+## 2026-11-24: Remove Clerk, Expo OTA, and background upstream phone-home fetches
+
+- **Removed all `@clerk/*` packages and integrations**: deleted `@clerk/backend`, `@clerk/clerk-js`, `@clerk/electron`, `@clerk/electron-passkeys`, `@clerk/expo`, `@clerk/expo-native-components`, `@clerk/react`, and `@clerk/shared` from `pnpm-workspace.yaml` and all app `package.json` files, removed `DesktopClerk`, `ClerkTokenStore`, web/mobile Clerk auth shells, `apps/mobile/clerk-theme.json`, `patches/@clerk__expo-native-components@0.4.4.patch`, desktop CSP allowlists for Clerk/Cloudflare challenges, and `.env.example` Clerk/relay defaults.
+- **Removed Expo EAS OTA updates**: disabled `updates` and stripped `https://u.expo.dev/...` and upstream `eas.projectId` / `owner` from `apps/mobile/app.config.ts`.
+- **Removed background upstream catalog & pricing fetches**: `ModelManifest` now serves only the bundled manifest (no fetch to `raw.githubusercontent.com/pingdotgg/t3code`), and `UsageService` loads only locally cached rates (no fetch to `raw.githubusercontent.com/BerriAI/litellm` or `api.github.com`).
+- **Orphaned telemetry i18n strings & dead references**: removed 10 unused OTLP/trace-diagnostics translation keys across all 10 web locales, 3 unused crash-report translation keys across all 10 mobile locales, dead `OtlpEndpointCheck.test.ts` shard weight, dead `RpcInstrumentation.ts` doc link, and stale client-analytics test comment.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
