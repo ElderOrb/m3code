@@ -5,6 +5,13 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: macOS & desktop performance and fluidity optimizations
+
+- **SQLite unified-memory tuning**: configured `PRAGMA cache_size = -64000` (64 MiB page cache) and `PRAGMA mmap_size = 268435456` (256 MiB memory-mapped reads) in `apps/server/src/persistence/Sqlite.ts` to eliminate repeated `pread` syscalls during thread switches and search.
+- **Zero-compression loopback WebSockets**: disabled `perMessageDeflate` when the server binds to loopback (`127.0.0.1` / `::1` / `localhost`) in `apps/server/src/server.ts`, eliminating zlib compress/decompress CPU overhead during high-speed local token streaming while keeping compression active for remote network binds.
+- **Electron renderer V8 bytecode cache**: enabled `v8CacheOptions: "bypassHeatCheck"` on the main `BrowserWindow` in `apps/desktop/src/window/DesktopWindow.ts` for faster cold starts.
+- **Zero-readback opaque & reduced-transparency CSS fast path**: set `data-glass-opaque="true"` at 100% glass opacity and honored `@media (prefers-reduced-transparency: reduce)` in `apps/web/src/index.css` to strip `backdrop-filter` completely instead of keeping `blur(0px) saturate(...)` compositor readback layers on macOS Retina.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,

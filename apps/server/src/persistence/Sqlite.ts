@@ -85,6 +85,11 @@ const makeLayerSetup = <E, R>(migrate: Effect.Effect<unknown, E, R>) =>
       // Keep statement journals and sort spills off the disk.
       // Large statements and open savepoints can increase peak memory use.
       yield* sql`PRAGMA temp_store = MEMORY;`;
+      // Give SQLite a 64 MiB page cache and 256 MiB memory-mapped I/O window
+      // (SQLite defaults to ~2 MiB cache and 0 mmap) to eliminate repeated pread syscalls
+      // on Apple Silicon unified memory during thread switches and search.
+      yield* sql`PRAGMA cache_size = -64000;`;
+      yield* sql`PRAGMA mmap_size = 268435456;`;
       // PASSIVE checkpoints retain peak WAL size until the last connection closes.
       yield* sql.unsafe(`PRAGMA journal_size_limit = ${WAL_SIZE_LIMIT_BYTES};`);
       yield* migrate;

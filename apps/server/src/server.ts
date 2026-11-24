@@ -372,6 +372,11 @@ const layerHttpServer = Layer.unwrap(
     });
     yield* ManagedLimits.closeTailscaleServeTo(policy, { host: bindHost, port: config.port });
     const runSync = Effect.runSyncWith(yield* Effect.context<never>());
+    const isLoopbackBindHost =
+      bindHost === undefined ||
+      bindHost === "127.0.0.1" ||
+      bindHost === "::1" ||
+      bindHost === "localhost";
     return NodeHttpServer.layer(
       () => {
         const server = rejectRequestsUntilServing(
@@ -386,11 +391,10 @@ const layerHttpServer = Layer.unwrap(
         host: bindHost,
         port: config.port,
         gracefulShutdownTimeout: HTTP_PREEMPTIVE_SHUTDOWN_GRACE_MS,
-        // Context takeover stays enabled (ws default) so the compression
-        // window is shared across frames — that also makes small frames cheap
-        // to compress, so no size threshold is set (ws only honors
-        // `threshold` when context takeover is disabled).
-        websocket: { perMessageDeflate: true },
+        // Skip per-frame zlib compression on loopback: local IPC bandwidth is effectively
+        // free, and skipping deflate/inflate cuts CPU and token-to-glass latency during fast
+        // streaming. Keep compression enabled with shared context takeover for network binds.
+        websocket: { perMessageDeflate: !isLoopbackBindHost },
       },
     ).pipe(Layer.merge(layerSpawner));
   }),
