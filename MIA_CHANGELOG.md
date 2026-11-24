@@ -5,6 +5,14 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: LLM Gateway text generator
+
+**Settings → Providers → Text generators → Add generator** lists **LLM Gateway** next to
+OpenRouter: enter an [LLM Gateway](https://llmgateway.io) key to use any model it serves for thread
+titles, commit messages, pull request text, branch names and voice cleanup. It is the existing
+OpenAI-compatible generator with the base URL filled in (`https://api.llmgateway.io/v1`) and its
+own icon. Nothing changes on the server or in the protocol.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,

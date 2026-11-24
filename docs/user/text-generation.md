@@ -14,6 +14,7 @@ Go to **Settings → Providers → Text generators** and choose **Add generator*
 
 - **OpenAI** or **Anthropic** — enter an API key.
 - **OpenRouter** — enter an OpenRouter key to use any model it serves.
+- **LLM Gateway** — enter an [LLM Gateway](https://llmgateway.io) key to use any model it serves.
 - **Custom (OpenAI-compatible)** — enter the base URL of any other endpoint, such as Ollama at
   `http://localhost:11434/v1` or LM Studio. Local endpoints usually need no key. The environment's
   server makes the requests, so on a remote environment `localhost` means that machine, not yours.
