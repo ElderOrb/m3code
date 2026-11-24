@@ -517,4 +517,37 @@ describe("DesktopServerExposure", () => {
       },
     ),
   );
+
+  it.effect("advertises WireGuard and direct mesh interfaces without Tailscale", () =>
+    withHarness(
+      {
+        ...lanNetworkInterfaces,
+        wg0: [
+          {
+            address: "10.88.0.3",
+            family: "IPv4",
+            internal: false,
+          },
+        ],
+      },
+      Effect.gen(function* () {
+        const serverExposure = yield* DesktopServerExposure.DesktopServerExposure;
+        yield* serverExposure.configureFromSettings({ port: 4173 });
+        yield* serverExposure.setMode("network-accessible");
+
+        const endpoints = yield* serverExposure.getAdvertisedEndpoints;
+        assert.deepEqual(
+          endpoints.map((endpoint) => endpoint.httpBaseUrl),
+          [
+            "http://127.0.0.1:4173/",
+            "http://192.168.1.20:4173/",
+            "http://10.88.0.3:4173/",
+          ],
+        );
+        const mesh = endpoints.find((endpoint) => endpoint.httpBaseUrl === "http://10.88.0.3:4173/");
+        assert.equal(mesh?.provider.id, "direct-mesh");
+        assert.equal(mesh?.label, "Direct mesh (wg0)");
+      }),
+    ),
+  );
 });

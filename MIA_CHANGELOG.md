@@ -104,6 +104,10 @@ Fixed runtime and typecheck bugs on `main`:
 
 - **Antigravity ToS compliance**: removed OS keyring / Windows Credential Manager OAuth token extraction, spoofed `antigravity/hub/2.24.0 (aidev_client; ...)` User-Agent, and undocumented `daily-cloudcode-pa.googleapis.com/v1internal:*` / `cloudcode-pa.googleapis.com/v1internal:*` quota calls from `apps/server/src/provider/antigravityUsageLimits.ts` and `apps/server/src/usage/cliproxyApi.ts`. The official `agy acp` agent driver remains intact.
 
+## 2026-11-24: Direct WireGuard / mesh network exposure without Tailscale
+
+- **Tailscale-free mesh endpoints**: `DesktopServerExposure` now detects active WireGuard and direct mesh/VPN interfaces (`wg*`, `utun*`, `tun*`, `tap*`, `nebula*`, `zt*`) in network-accessible mode and advertises them as first-class `Direct mesh (<iface>)` pairing/connection endpoints alongside the LAN address, without requiring Tailscale or T3 Connect.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
