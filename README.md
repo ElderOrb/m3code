@@ -182,6 +182,8 @@ Linked providers send their requests through M3 Code, which:
   working unless you set the mode to `require`.
 - See [Encrypted remote control](./docs/user/encrypted-remote-control.md).
 
+![Settings → Sharing & access: the End-to-end encryption switch with the host fingerprint](pics/e2ee-sharing-access.png)
+
 ### Appearance
 
 - **Dark** is two-tone: gray sidebar and panels over a near-black main area. The original

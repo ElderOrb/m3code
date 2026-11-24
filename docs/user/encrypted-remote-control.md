@@ -19,6 +19,8 @@ client also checks the host's identity, so someone in the middle cannot pose as 
 
 ### Turn it on
 
+![The End-to-end encryption switch in Settings → Sharing & access](../../pics/e2ee-sharing-access.png)
+
 1. On the host, open **Settings → Sharing & access** and switch on **End-to-end encryption**.
    The row shows the host's fingerprint, for example `AB12-CD34-EF56-7890`.
 2. Still on the host, press **Create link** and pair each device from that link (or its QR code).
