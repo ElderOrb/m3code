@@ -1,4 +1,3 @@
-import type { getClerkInstance } from "@clerk/expo";
 import {
   createCloudAccountService,
   ManagedRelay,
@@ -27,7 +26,16 @@ import { removeCloudEnvironments } from "./cloud-drafts";
 import { clearConnectOnboardingRequest, requestConnectOnboarding } from "./connectOnboarding";
 import { resolveRelayClerkTokenOptions } from "./publicConfig";
 
-type ClerkInstance = ReturnType<typeof getClerkInstance>;
+interface CloudAuthInstance {
+  readonly session?: {
+    readonly getToken: (options?: unknown) => Promise<string | null>;
+  } | null;
+  readonly addListener: (
+    listener: (resources: { readonly user?: { readonly id?: string | null } | null }) => void,
+  ) => () => void;
+}
+
+type ClerkInstance = CloudAuthInstance;
 
 export function deactivateCloudRelayAccount(): void {
   setAgentAwarenessRelayTokenProvider(null);

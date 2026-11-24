@@ -64,8 +64,7 @@ export function resolveCloudPublicConfig(extra: ExpoExtra = Constants.expoConfig
 }
 
 export function hasCloudPublicConfig(): boolean {
-  const config = resolveCloudPublicConfig();
-  return Boolean(config.clerk.publishableKey && config.clerk.jwtTemplate && config.relay.url);
+  return false;
 }
 
 export function resolveRelayClerkTokenOptions() {

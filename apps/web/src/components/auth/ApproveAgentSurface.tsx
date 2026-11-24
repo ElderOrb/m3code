@@ -1,4 +1,4 @@
-import { useAuth, useClerk } from "@clerk/react";
+import { useCloudAuth as useAuth, useCloudClient as useClerk } from "../../cloud/managedAuth";
 import { useAtomValue } from "@effect/atom-react";
 import { managedRelaySessionAtom } from "@t3tools/client-runtime/relay";
 import {

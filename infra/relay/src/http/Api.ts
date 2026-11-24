@@ -1,4 +1,3 @@
-import { createClerkClient, verifyToken } from "@clerk/backend";
 import { sql as drizzleSql } from "drizzle-orm";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Context from "effect/Context";
@@ -1525,48 +1524,25 @@ function hasExpectedClerkAudience(audience: unknown, expectedAudience: string): 
 }
 
 function verifyClerkBearerToken(
-  config: RelayConfiguration.RelayConfiguration["Service"],
-  token: string,
-) {
-  return Effect.tryPromise({
-    try: () =>
-      verifyToken(token, {
-        secretKey: Redacted.value(config.clerkSecretKey),
-        audience: config.clerkJwtAudience,
-      }),
-    catch: (cause) => new ClerkTokenVerificationFailed({ cause }),
-  }).pipe(
-    Effect.withSpan("verify_clerk_bearer_token", {
-      attributes: { "relay.auth.token_length": token.length },
+  _config: RelayConfiguration.RelayConfiguration["Service"],
+  _token: string,
+): Effect.Effect<{ readonly sub?: string; readonly aud?: unknown }, ClerkTokenVerificationFailed> {
+  return Effect.fail(
+    new ClerkTokenVerificationFailed({
+      cause: new Error("Clerk authentication has been removed from this fork."),
     }),
   );
 }
 
 function verifyClerkOAuthBearerToken(
-  config: RelayConfiguration.RelayConfiguration["Service"],
-  token: string,
-) {
-  return Effect.tryPromise({
-    try: async () => {
-      const client = createClerkClient({
-        secretKey: Redacted.value(config.clerkSecretKey),
-        publishableKey: config.clerkPublishableKey,
-        telemetry: { disabled: true },
-      });
-      const state = await client.authenticateRequest(
-        new Request(config.relayIssuer, {
-          headers: { authorization: `Bearer ${token}` },
-        }),
-        { acceptsToken: "oauth_token" },
-      );
-      const auth = state.toAuth();
-      if (!state.isAuthenticated || !auth.userId) {
-        throw new Error("Clerk OAuth token is not authenticated.");
-      }
-      return { sub: auth.userId };
-    },
-    catch: (cause) => new ClerkTokenVerificationFailed({ cause }),
-  });
+  _config: RelayConfiguration.RelayConfiguration["Service"],
+  _token: string,
+): Effect.Effect<{ readonly sub: string }, ClerkTokenVerificationFailed> {
+  return Effect.fail(
+    new ClerkTokenVerificationFailed({
+      cause: new Error("Clerk authentication has been removed from this fork."),
+    }),
+  );
 }
 
 export function verifyRelayClientBearerToken(

@@ -5,11 +5,12 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
-## 2026-11-24: Disable Clerk SDK telemetry & purge final telemetry remnants
+## 2026-11-24: Remove Clerk, Expo OTA, and background upstream phone-home fetches
 
-- **Clerk SDK telemetry disabled**: passed `telemetry={false}` to every `<ClerkProvider>` (`apps/web` browser & Electron shells, `apps/mobile` `CloudAuthProvider`) and `telemetry: { disabled: true }` to every `createClerkClient` call in `infra/relay`, preventing default telemetry beacons to `clerk-telemetry.com`.
-- **Orphaned telemetry i18n strings**: removed 10 unused OTLP/trace-diagnostics translation keys across all 10 web locales and 3 unused crash-report translation keys across all 10 mobile locales.
-- **Dead telemetry references**: removed the stale `OtlpEndpointCheck.test.ts` entry from `apps/server/src/testUtils/shardWeights.json`, the dead `RpcInstrumentation.ts` link from `docs/internals/effect-services.md`, and the stale client-analytics comment in `Orchestrator.control-reads.test.ts`.
+- **Removed all `@clerk/*` packages and integrations**: deleted `@clerk/backend`, `@clerk/clerk-js`, `@clerk/electron`, `@clerk/electron-passkeys`, `@clerk/expo`, `@clerk/expo-native-components`, `@clerk/react`, and `@clerk/shared` from `pnpm-workspace.yaml` and all app `package.json` files, removed `DesktopClerk`, `ClerkTokenStore`, web/mobile Clerk auth shells, `apps/mobile/clerk-theme.json`, `patches/@clerk__expo-native-components@0.4.4.patch`, desktop CSP allowlists for Clerk/Cloudflare challenges, and `.env.example` Clerk/relay defaults.
+- **Removed Expo EAS OTA updates**: disabled `updates` and stripped `https://u.expo.dev/...` and upstream `eas.projectId` / `owner` from `apps/mobile/app.config.ts`.
+- **Removed background upstream catalog & pricing fetches**: `ModelManifest` now serves only the bundled manifest (no fetch to `raw.githubusercontent.com/pingdotgg/t3code`), and `UsageService` loads only locally cached rates (no fetch to `raw.githubusercontent.com/BerriAI/litellm` or `api.github.com`).
+- **Orphaned telemetry i18n strings & dead references**: removed 10 unused OTLP/trace-diagnostics translation keys across all 10 web locales, 3 unused crash-report translation keys across all 10 mobile locales, dead `OtlpEndpointCheck.test.ts` shard weight, dead `RpcInstrumentation.ts` doc link, and stale client-analytics test comment.
 
 ## 2026-11-24: Updated M3 box icon
 
