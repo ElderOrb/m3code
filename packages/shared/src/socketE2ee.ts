@@ -8,6 +8,7 @@ import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Socket from "effect/socket/Socket";
 import type { NonEmptyReadonlyArray } from "effect/Array";
 import { ed25519, x25519 } from "@noble/curves/ed25519.js";
@@ -397,6 +398,7 @@ const makeE2eeSocket = Effect.fn("socketE2ee.makeSocket")(function* (
     yield* Deferred.make<ActiveConnection, Socket.SocketError>(),
   );
   const random = yield* SecureRandom.SecureRandom;
+  const writeLock = Semaphore.makeUnsafe(1);
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -412,18 +414,23 @@ const makeE2eeSocket = Effect.fn("socketE2ee.makeSocket")(function* (
       return writer.write(chunk);
     }
     const plaintext = typeof chunk === "string" ? encoder.encode(chunk) : chunk;
+    // Counter assignment, encryption and the write must be one atomic step:
+    // concurrent writers would otherwise reorder records or stamp the wrong counter.
     const send = Effect.flatMap(Ref.get(tickets), (ticket) =>
       Effect.flatMap(Deferred.await(ticket), (connection) =>
-        Effect.gen(function* () {
-          const direction = config.role === "client" ? DIRECTION_C2S : DIRECTION_S2C;
-          const ciphertext = yield* encryptRecord(
-            connection.session,
-            config.aead,
-            plaintext,
-            direction,
-          );
-          yield* writer.write(encodeRecord(ciphertext, connection.session.sendCounter - 1));
-        }),
+        writeLock.withPermit(
+          Effect.gen(function* () {
+            const direction = config.role === "client" ? DIRECTION_C2S : DIRECTION_S2C;
+            const counter = connection.session.sendCounter;
+            const ciphertext = yield* encryptRecord(
+              connection.session,
+              config.aead,
+              plaintext,
+              direction,
+            );
+            yield* writer.write(encodeRecord(ciphertext, counter));
+          }),
+        ),
       ),
     );
     return Effect.catchIf(send, () => true, (error) =>

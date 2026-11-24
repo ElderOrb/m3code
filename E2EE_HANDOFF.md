@@ -136,7 +136,7 @@ splitter is a no-op on them).
   mobile, desktop (remaining known errors are the pre-existing ones listed in
   `handoff.md` §5: `apps/server/src/inference/*`, `advertisedJsonSchema.test.ts`,
   `ProviderSessionManager.ts`, `apps/mobile/src/Stack.tsx`).
-- Tests: `socketE2ee.test.ts` 10/10; `transportSecurity.test.ts` 6/6;
+- Tests: `socketE2ee.test.ts` 8/8; `transportSecurity.test.ts` 6/6;
   presentation badge tests; session tests 93/93 unchanged; ws compression suite
   unchanged. Pre-existing failures (verified NOT caused by this work by stash
   re-runs): `orchestration-v2/runtimeLayer.test.ts` ×3,

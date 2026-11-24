@@ -3660,16 +3660,13 @@ export const layer = Layer.unwrap(
           ),
         );
         // The RPC server upgrades the request itself, so socket wrapping goes
-        // through the request it reads. E2EE sits outermost: its records are
-        // binary, so the frame splitter passes them through untouched.
+        // through the request it reads. The frame splitter sits outside E2EE:
+        // it only splits string frames, which E2EE would turn into binary records.
         const framedRequested = url.value.searchParams.has(SOCKET_FRAME_PARTS_QUERY_PARAM);
         const e2eeActive =
           e2eeRequested && currentSettings.e2eeMode !== "off" && Option.isSome(e2eeIdentity);
-        const baseUpgrade = framedRequested
-          ? Effect.map(request.upgrade, splitLargeSocketFrames)
-          : request.upgrade;
-        const upgradeEffect = e2eeActive
-          ? Effect.flatMap(baseUpgrade, (socket) =>
+        const encryptedUpgrade = e2eeActive
+          ? Effect.flatMap(request.upgrade, (socket) =>
               Effect.flatMap(Option.getOrThrow(e2eeIdentity).getKeypair, (keypair) =>
                 wrapServerSocketWithE2ee(socket, {
                   environmentId: e2eeEnvironmentId,
@@ -3677,7 +3674,10 @@ export const layer = Layer.unwrap(
                 }),
               ),
             )
-          : baseUpgrade;
+          : request.upgrade;
+        const upgradeEffect = framedRequested
+          ? Effect.map(encryptedUpgrade, splitLargeSocketFrames)
+          : encryptedUpgrade;
         const e2eeRpcWebSocketHttpEffect = rpcWebSocketHttpEffect.pipe(
           Effect.provideService(
             HttpServerRequest.HttpServerRequest,

@@ -202,6 +202,52 @@ describe("socketE2ee", () => {
     }).pipe(Effect.provide(layerE2eeCrypto)),
   );
 
+  it.live("concurrent writers keep records ordered and counters correct", () =>
+    Effect.gen(function* () {
+      const pair = yield* makeSocketPair;
+      const identity = yield* generateIdentityKeypair();
+      const count = 200;
+      const received = yield* Deferred.make<ReadonlyArray<string>>();
+      const serverFiber = yield* Effect.forkScoped(
+        Effect.gen(function* () {
+          const wrapped = yield* wrapServerSocketWithE2ee(pair.server, {
+            environmentId: ENVIRONMENT_ID,
+            identitySeed: identity.seed,
+          });
+          yield* Effect.scoped(
+            Effect.gen(function* () {
+              const reader = yield* wrapped.reader;
+              const frames: Array<string> = [];
+              while (frames.length < count) {
+                frames.push(...(yield* reader.pull).map(String));
+              }
+              yield* Deferred.succeed(received, frames);
+            }),
+          );
+        }),
+      );
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const wrapped = yield* wrapClientSocketWithE2ee(pair.client, {
+            environmentId: ENVIRONMENT_ID,
+            expectedServerIdentityKey: identity.publicKey,
+          });
+          yield* wrapped.reader;
+          const writer = yield* wrapped.writer;
+          yield* Effect.forEach(
+            Array.from({ length: count }, (_, index) => `frame-${index}`),
+            (frame) => writer.write(frame),
+            { concurrency: "unbounded", discard: true },
+          );
+          const frames = yield* Deferred.await(received);
+          assert.equal(frames.length, count);
+          assert.deepEqual([...frames].sort(), Array.from({ length: count }, (_, i) => `frame-${i}`).sort());
+        }),
+      );
+      yield* Fiber.interrupt(serverFiber);
+    }).pipe(Effect.provide(layerE2eeCrypto)),
+  );
+
   it.effect("every wire frame after the handshake is opaque binary ciphertext", () =>
     Effect.gen(function* () {
       const pair = yield* makeSocketPair;

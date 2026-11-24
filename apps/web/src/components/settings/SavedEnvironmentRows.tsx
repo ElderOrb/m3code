@@ -572,12 +572,10 @@ function ConfiguredCloudLinkRow({
   environmentId,
   canManageRelay,
   connectDeviceApproval,
-  transportSecurity,
 }: {
   readonly environmentId: EnvironmentId;
   readonly canManageRelay: boolean;
   readonly connectDeviceApproval: ConnectDeviceApprovalControl | null;
-  readonly transportSecurity: TransportSecurityControl | null;
 }) {
   const setting = useSearchableSetting();
   const gt = useGT();
@@ -856,6 +854,36 @@ function ConfiguredCloudLinkRow({
           }
         />
       ) : null}
+    </>
+  );
+}
+
+/** Older servers have no device approval, so callers pass null and the row stays hidden. */
+export interface ConnectDeviceApprovalControl {
+  readonly required: boolean;
+  readonly canManage: boolean;
+}
+
+/** Older servers have no transport policy or E2EE, so callers pass null and the rows stay hidden. */
+export interface TransportSecurityControl {
+  readonly policy: "any" | "private-e2ee-only";
+  readonly e2eeMode: "off" | "prefer" | "require";
+  readonly fingerprint: string | null;
+  readonly canManage: boolean;
+}
+
+/** Lives outside the T3 Connect row: it must show on hosts without T3 Connect configured. */
+export function TransportSecurityRows({
+  environmentId,
+  transportSecurity,
+}: {
+  readonly environmentId: EnvironmentId;
+  readonly transportSecurity: TransportSecurityControl | null;
+}) {
+  const gt = useGT();
+  const updateEnvironmentSettings = useUpdateEnvironmentSettings(environmentId);
+  return (
+    <>
       {transportSecurity ? (
         <SettingsRow
           title={gt("Private transports only")}
@@ -917,7 +945,7 @@ function ConfiguredCloudLinkRow({
                     type: "warning",
                     title: gt("End-to-end encryption stays on"),
                     description: gt(
-                      "To turn it off, set e2eeMode to \"off\" in the host's settings.json. Clients pin this key when they pair.",
+                      'To turn it off, set e2eeMode to "off" in the host\'s settings.json. Clients pin this key when they pair.',
                     ),
                   });
                   return;
@@ -932,32 +960,16 @@ function ConfiguredCloudLinkRow({
   );
 }
 
-/** Older servers have no device approval, so callers pass null and the row stays hidden. */
-export interface ConnectDeviceApprovalControl {
-  readonly required: boolean;
-  readonly canManage: boolean;
-}
-
-/** Older servers have no transport policy or E2EE, so callers pass null and the rows stay hidden. */
-export interface TransportSecurityControl {
-  readonly policy: "any" | "private-e2ee-only";
-  readonly e2eeMode: "off" | "prefer" | "require";
-  readonly fingerprint: string | null;
-  readonly canManage: boolean;
-}
-
 export function CloudLinkRow({
   environmentId,
   canReadRelay,
   canManageRelay,
   connectDeviceApproval,
-  transportSecurity,
 }: {
   readonly environmentId: EnvironmentId;
   readonly canReadRelay: boolean;
   readonly canManageRelay: boolean;
   readonly connectDeviceApproval: ConnectDeviceApprovalControl | null;
-  readonly transportSecurity: TransportSecurityControl | null;
 }) {
   const gt = useGT();
   if (!hasCloudPublicConfig()) return null;
@@ -976,7 +988,6 @@ export function CloudLinkRow({
       environmentId={environmentId}
       canManageRelay={canManageRelay}
       connectDeviceApproval={connectDeviceApproval}
-      transportSecurity={transportSecurity}
     />
   );
 }

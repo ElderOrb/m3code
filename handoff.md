@@ -12,7 +12,7 @@ know. Read this before touching anything. Branch: `remove-all-telemetry` (pushed
 `origin/main` as the default branch; local `main` tracks the same commits).
 
 Repo: `/home/zurih/MiaAI_Lab/Linux_Apps/t3code`
-Fork: `origin` = `MiaAI-Lab/t3code` · Upstream: `upstream` = `pingdotgg/t3code`
+Fork: `origin` = `MiaAI-Lab/m3code` · Upstream: `upstream` = `pingdotgg/t3code`
 Latest pushed commit: `cd1bd66584` (M3 sidebar wordmark). See `git log` for the full chain.
 
 ## 1. What this fork is

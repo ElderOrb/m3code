@@ -293,13 +293,14 @@ export const make = Effect.fn("RpcSessionFactory.make")(function* (
     const layerSocket = Layer.effect(
       Socket.Socket,
       e2eeServerIdentityKey !== undefined && Option.isSome(e2eeAead)
-        ? Effect.flatMap(
-            Effect.map(Effect.service(Socket.Socket), joinSocketFrameParts),
-            (socket) =>
+        ? Effect.map(
+            Effect.flatMap(Effect.service(Socket.Socket), (socket) =>
               wrapClientSocketWithE2ee(socket, {
                 environmentId: connection.environmentId,
                 expectedServerIdentityKey: e2eeServerIdentityKey,
               }),
+            ),
+            joinSocketFrameParts,
           )
         : Effect.map(Effect.service(Socket.Socket), joinSocketFrameParts),
     ).pipe(

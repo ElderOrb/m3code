@@ -143,6 +143,7 @@ import {
 import { ITEM_ROW_CLASSNAME } from "./itemRows";
 import {
   CloudLinkRow,
+  TransportSecurityRows,
   CloudRemoteEnvironmentRows,
   SavedBackendListRow,
 } from "./SavedEnvironmentRows";
@@ -1153,9 +1154,7 @@ function ConnectionsSettingsContent({
   ) => (
     <PairingClientsList
       servedByEnvironment={isPrimaryAccess}
-      serverIdentityKey={
-        accessServerConfig?.transportSecurity?.identityPublicKey ?? null
-      }
+      serverIdentityKey={accessServerConfig?.transportSecurity?.identityPublicKey ?? null}
       endpointUrl={desktopServerExposureState?.endpointUrl}
       endpoints={visibleDesktopAdvertisedEndpoints}
       defaultEndpointKey={defaultDesktopAdvertisedEndpointKey}
@@ -1373,6 +1372,20 @@ function ConnectionsSettingsContent({
             ) : canManageLocalBackend ? (
               renderDisabledNetworkAccessRow()
             ) : null}
+            <TransportSecurityRows
+              environmentId={accessEnvironmentId}
+              transportSecurity={
+                accessServerConfig?.settings.remoteTransportPolicy === undefined
+                  ? null
+                  : {
+                      policy: accessServerConfig.settings.remoteTransportPolicy,
+                      e2eeMode: accessServerConfig.settings.e2eeMode,
+                      fingerprint:
+                        accessServerConfig.transportSecurity?.identityPublicKeyFingerprint ?? null,
+                      canManage: canWriteAccess,
+                    }
+              }
+            />
             {canReadRelay || canManageRelay ? (
               <CloudLinkRow
                 environmentId={accessEnvironmentId}
@@ -1383,17 +1396,6 @@ function ConnectionsSettingsContent({
                     ? null
                     : {
                         required: accessServerConfig.settings.requireConnectDeviceApproval,
-                        canManage: canWriteAccess,
-                      }
-                }
-                transportSecurity={
-                  accessServerConfig?.settings.remoteTransportPolicy === undefined
-                    ? null
-                    : {
-                        policy: accessServerConfig.settings.remoteTransportPolicy,
-                        e2eeMode: accessServerConfig.settings.e2eeMode,
-                        fingerprint:
-                          accessServerConfig.transportSecurity?.identityPublicKeyFingerprint ?? null,
                         canManage: canWriteAccess,
                       }
                 }
