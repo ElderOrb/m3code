@@ -28,6 +28,8 @@ export function inferenceFailureAdvice(cause: InferenceFailureCause): string {
       return "Check that the model server is running and reachable.";
     case "cancelled":
       return "The request was stopped before it completed.";
+    case "upstream-http":
+      return "The model server answered with an error; check its status and logs.";
     case "context-overflow":
       return "Compact the conversation or reduce its prompt and output budget.";
     case "unsupported-field":
