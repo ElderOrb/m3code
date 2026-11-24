@@ -108,6 +108,13 @@ Fixed runtime and typecheck bugs on `main`:
 
 - **Tailscale-free mesh endpoints**: `DesktopServerExposure` now detects active WireGuard and direct mesh/VPN interfaces (`wg*`, `utun*`, `tun*`, `tap*`, `nebula*`, `zt*`) in network-accessible mode and advertises them as first-class `Direct mesh (<iface>)` pairing/connection endpoints alongside the LAN address, without requiring Tailscale or T3 Connect.
 
+## 2026-11-24: macOS & desktop performance and fluidity optimizations
+
+- **SQLite unified-memory tuning**: configured `PRAGMA cache_size = -64000` (64 MiB page cache) and `PRAGMA mmap_size = 268435456` (256 MiB memory-mapped reads) in `apps/server/src/persistence/Sqlite.ts` to eliminate repeated `pread` syscalls during thread switches and search.
+- **WebSocket compression stays on for every bind**: PR #8 turned it off on loopback binds, but Tailscale Serve and tunnels connect to loopback, so remote traffic would have lost compression. That part was left out.
+- **Electron renderer V8 bytecode cache**: enabled `v8CacheOptions: "bypassHeatCheck"` on the main `BrowserWindow` in `apps/desktop/src/window/DesktopWindow.ts` for faster cold starts.
+- **Zero-readback opaque & reduced-transparency CSS fast path**: set `data-glass-opaque="true"` at 100% glass opacity and honored `@media (prefers-reduced-transparency: reduce)` in `apps/web/src/index.css` to strip `backdrop-filter` completely instead of keeping `blur(0px) saturate(...)` compositor readback layers on macOS Retina.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
