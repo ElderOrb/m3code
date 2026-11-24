@@ -145,6 +145,7 @@ type PairingLinkListRowProps = {
   revokingPairingLinkId: string | null;
   onRevoke: (id: string) => void;
   canRevoke: boolean;
+  readonly serverIdentityKey?: string | null | undefined;
 };
 
 const PairingLinkListRow = memo(function PairingLinkListRow({
@@ -158,6 +159,7 @@ const PairingLinkListRow = memo(function PairingLinkListRow({
   revokingPairingLinkId,
   onRevoke,
   canRevoke,
+  serverIdentityKey,
 }: PairingLinkListRowProps) {
   const gt = useGT();
   const m = useMessages();
@@ -168,7 +170,9 @@ const PairingLinkListRow = memo(function PairingLinkListRow({
   const [qrEndpointId, setQrEndpointId] = useState<string | null>(null);
   const qrPanelId = useId();
 
-  const currentOriginPairingUrl = credential ? resolveCurrentOriginPairingUrl(credential) : null;
+  const currentOriginPairingUrl = credential
+    ? resolveCurrentOriginPairingUrl(credential, window.location.href, serverIdentityKey)
+    : null;
   const hostedPairingUrl =
     credential && endpointUrl != null && endpointUrl !== ""
       ? resolveHostedPairingUrl(endpointUrl, credential)
@@ -176,7 +180,7 @@ const PairingLinkListRow = memo(function PairingLinkListRow({
   const endpointPairingUrl = (() => {
     const endpoint = selectPairingEndpoint(endpoints, defaultEndpointKey);
     return endpoint && credential
-      ? resolveAdvertisedEndpointPairingUrl(endpoint, credential)
+      ? resolveAdvertisedEndpointPairingUrl(endpoint, credential, serverIdentityKey)
       : null;
   })();
   const endpointCopyOptions = (() => {
@@ -193,7 +197,7 @@ const PairingLinkListRow = memo(function PairingLinkListRow({
       if (endpoint.status === "unavailable") {
         continue;
       }
-      const url = resolveAdvertisedEndpointPairingUrl(endpoint, credential);
+      const url = resolveAdvertisedEndpointPairingUrl(endpoint, credential, serverIdentityKey);
       options.push({
         id: endpoint.id,
         preferenceKey: endpointDefaultPreferenceKey(endpoint),
@@ -864,6 +868,7 @@ type PairingClientsListProps = {
   onRevokePairingLink: (id: string) => void;
   onRevokeClientSession: (sessionId: ServerClientSessionRecord["sessionId"]) => void;
   canRevoke: boolean;
+  readonly serverIdentityKey?: string | null | undefined;
 };
 
 export const PairingClientsList = memo(function PairingClientsList({
@@ -881,6 +886,7 @@ export const PairingClientsList = memo(function PairingClientsList({
   onRevokePairingLink,
   onRevokeClientSession,
   canRevoke,
+  serverIdentityKey,
 }: PairingClientsListProps) {
   return (
     <>
@@ -897,6 +903,7 @@ export const PairingClientsList = memo(function PairingClientsList({
           revokingPairingLinkId={revokingPairingLinkId}
           onRevoke={onRevokePairingLink}
           canRevoke={canRevoke}
+          serverIdentityKey={serverIdentityKey}
         />
       ))}
 

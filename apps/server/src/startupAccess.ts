@@ -11,7 +11,10 @@ import {
 } from "@t3tools/shared/hostClassification";
 import * as HostProcess from "@t3tools/shared/HostProcess";
 import { QrCode } from "@t3tools/shared/qrCode";
-import { buildPairingAppLink } from "@t3tools/shared/remote";
+import {
+  buildPairingAppLink,
+  setPairingServerKeyOnUrl,
+} from "@t3tools/shared/remote";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { HttpServer } from "effect/http";
@@ -205,12 +208,20 @@ const resolveListeningPort = (address: unknown, fallbackPort: number): number =>
   return fallbackPort;
 };
 
-export const buildPairingUrl = (connectionString: string, token: string): string => {
+export const buildPairingUrl = (
+  connectionString: string,
+  token: string,
+  options?: { readonly serverIdentityKey?: string | undefined },
+): string => {
   const url = new URL(connectionString);
   url.pathname = "/pair";
   url.searchParams.delete("token");
   url.hash = new URLSearchParams([["token", token]]).toString();
-  return url.toString();
+  // Older clients ignore the unknown hash param; newer ones pin the server's
+  // E2EE identity key from it.
+  return options?.serverIdentityKey
+    ? setPairingServerKeyOnUrl(url, options.serverIdentityKey).toString()
+    : url.toString();
 };
 
 export const renderTerminalQrCode = (value: string, margin = 2): string => {
@@ -270,5 +281,4 @@ export const issueHeadlessServeAccessInfo = Effect.fn("issueHeadlessServeAccessI
     connectionString,
     token: issued.credential,
     pairingUrl: buildPairingUrl(connectionString, issued.credential),
-  } satisfies HeadlessServeAccessInfo;
-});
+  } satisfies HeadlessServeAccessInfo;});

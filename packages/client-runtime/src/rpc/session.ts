@@ -10,6 +10,13 @@ import {
   joinSocketFrameParts,
   SOCKET_FRAME_PARTS_QUERY_PARAM,
 } from "@t3tools/shared/socketFrameParts";
+import {
+  decodeIdentityKey,
+  layerE2eeCrypto,
+  SOCKET_E2EE_QUERY_PARAM,
+  wrapClientSocketWithE2ee,
+} from "@t3tools/shared/socketE2ee";
+import { Aead } from "effect/crypto";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -248,11 +255,53 @@ export const make = Effect.fn("RpcSessionFactory.make")(function* (
       });
       return socket;
     };
+    // A pinned E2EE identity key means this session must be end-to-end
+    // encrypted: the socket asks for it and refuses a plaintext fallback.
+    const e2eeServerIdentityKey =
+      connection.e2eeServerIdentityKey !== undefined
+        ? decodeIdentityKey(connection.e2eeServerIdentityKey)
+        : undefined;
+    if (
+      connection.e2eeServerIdentityKey !== undefined &&
+      e2eeServerIdentityKey === undefined
+    ) {
+      return yield* new ConnectionBlockedError({
+        reason: "configuration",
+        ...translatableDetail(msg("The saved end-to-end encryption key is invalid. Re-pair this environment.")),
+      });
+    }
+    // Optional so runtimes without the crypto layer keep working for
+    // non-pinned environments; a pinned one fails closed below.
+    const e2eeAead = e2eeServerIdentityKey === undefined
+      ? Option.none()
+      : yield* Effect.serviceOption(Aead.Aead);
+    if (e2eeServerIdentityKey !== undefined && Option.isNone(e2eeAead)) {
+      return yield* new ConnectionBlockedError({
+        reason: "configuration",
+        ...translatableDetail(
+          msg("This app build cannot run end-to-end encryption. Update the app to connect to {host}.", {
+            host: connection.label,
+          }),
+        ),
+      });
+    }
     const socketUrl = new URL(connection.socketUrl);
     socketUrl.searchParams.set(SOCKET_FRAME_PARTS_QUERY_PARAM, "1");
+    if (e2eeServerIdentityKey !== undefined) {
+      socketUrl.searchParams.set(SOCKET_E2EE_QUERY_PARAM, "1");
+    }
     const layerSocket = Layer.effect(
       Socket.Socket,
-      Effect.map(Effect.service(Socket.Socket), joinSocketFrameParts),
+      e2eeServerIdentityKey !== undefined && Option.isSome(e2eeAead)
+        ? Effect.flatMap(
+            Effect.map(Effect.service(Socket.Socket), joinSocketFrameParts),
+            (socket) =>
+              wrapClientSocketWithE2ee(socket, {
+                environmentId: connection.environmentId,
+                expectedServerIdentityKey: e2eeServerIdentityKey,
+              }),
+          )
+        : Effect.map(Effect.service(Socket.Socket), joinSocketFrameParts),
     ).pipe(
       Layer.provide(
         Socket.layerWebSocket(socketUrl.toString(), {
@@ -260,6 +309,7 @@ export const make = Effect.fn("RpcSessionFactory.make")(function* (
         }),
       ),
       Layer.provide(Layer.succeed(Socket.WebSocketConstructor, countingWebSocketConstructor)),
+      Layer.provide(layerE2eeCrypto),
     );
     const layerProtocol = Layer.effect(
       RpcClient.Protocol,

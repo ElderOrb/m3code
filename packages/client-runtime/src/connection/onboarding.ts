@@ -145,6 +145,8 @@ export const preparePairingRegistration = Effect.fn(
       label: descriptor.label,
       httpBaseUrl: target.httpBaseUrl,
       wsBaseUrl: target.wsBaseUrl,
+      // Pinned from the pairing link so every later connect verifies it.
+      ...(target.serverIdentityKey ? { serverIdentityKey: target.serverIdentityKey } : {}),
     }),
   };
   // The registry checks again under its lease; this early check keeps a refused code unspent.

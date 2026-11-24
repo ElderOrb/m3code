@@ -3,7 +3,7 @@ import { T, useGT } from "gt-react";
 import { SettingsIcon } from "lucide-react";
 import { shortcutLabelForCommand } from "../../keybindings";
 import { commandForProjectScript } from "../../projectScripts";
-import { ScriptIcon } from "../projectScriptEditor";
+import { ScriptIcon, ProjectScriptFlags } from "../projectScriptEditor";
 import { Button } from "../ui/button";
 import { SettingsRow } from "./settingsLayout";
 
@@ -35,16 +35,7 @@ export function ProjectActionsList({
           <span className="flex min-w-0 items-center gap-2">
             <ScriptIcon icon={script.icon} className="size-4 shrink-0 text-muted-foreground" />
             <span className="min-w-0 truncate">{script.name}</span>
-            {script.runOnWorktreeCreate ? (
-              <span className="shrink-0 rounded-sm border border-border/60 px-1.5 py-px text-2xs font-normal text-muted-foreground">
-                {gt("setup", { $context: "badge, action runs when a worktree is created" })}
-              </span>
-            ) : null}
-            {script.runOnSettle ? (
-              <span className="shrink-0 rounded-sm border border-border/60 px-1.5 py-px text-2xs font-normal text-muted-foreground">
-                <T>on settle</T>
-              </span>
-            ) : null}
+            <ProjectScriptFlags script={script} />
             {script.previewUrl ? (
               <span className="shrink-0 rounded-sm border border-border/60 px-1.5 py-px text-2xs font-normal text-muted-foreground max-sm:hidden">
                 <T>preview · desktop only</T>

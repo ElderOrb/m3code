@@ -80,6 +80,32 @@ export function ScriptIcon({
   return <PlayIcon className={className} />;
 }
 
+/** Badges for what a script runs beyond a manual click: worktree setup and settle. */
+export function ProjectScriptFlags({
+  script,
+}: {
+  script: {
+    readonly runOnWorktreeCreate?: boolean | undefined;
+    readonly runOnSettle?: boolean | undefined;
+  };
+}) {
+  const gt = useGT();
+  return (
+    <>
+      {script.runOnWorktreeCreate ? (
+        <span className="shrink-0 rounded-sm border border-border/60 px-1.5 py-px text-2xs font-normal text-muted-foreground">
+          {gt("setup", { $context: "badge, action runs when a worktree is created" })}
+        </span>
+      ) : null}
+      {script.runOnSettle ? (
+        <span className="shrink-0 rounded-sm border border-border/60 px-1.5 py-px text-2xs font-normal text-muted-foreground">
+          <T>on settle</T>
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 export interface NewProjectScriptInput {
   name: string;
   command: string;

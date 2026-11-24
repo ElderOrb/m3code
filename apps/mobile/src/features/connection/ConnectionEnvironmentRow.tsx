@@ -26,7 +26,10 @@ import { environmentPresentations } from "../../state/presentation";
 import { ConnectionDiagnosisDetails, useConnectionDiagnosis } from "./ConnectionDiagnosisDetails";
 import { ConnectionFormField } from "./ConnectionFormField";
 import { ConnectionStatusDot } from "./ConnectionStatusDot";
-import { environmentStatusText } from "./environmentStatusText";
+import {
+  connectionSecuritySummaryText,
+  environmentStatusText,
+} from "./environmentStatusText";
 import type { MessageResolver } from "../../i18n/messages";
 
 function connectionStatusLabel(
@@ -36,7 +39,7 @@ function connectionStatusLabel(
   if (!environment.isEnabled && environment.connectionState !== "unsupported") {
     return resolve(msg("Off", { $context: "environment is switched off" }));
   }
-  return environmentStatusText(
+  const status = environmentStatusText(
     {
       phase: environment.connectionState,
       error: environment.connectionError,
@@ -47,6 +50,8 @@ function connectionStatusLabel(
     },
     resolve,
   );
+  const security = connectionSecuritySummaryText(environment, resolve);
+  return security === null ? status : `${status} · ${security}`;
 }
 
 export function ConnectionEnvironmentRow(props: {

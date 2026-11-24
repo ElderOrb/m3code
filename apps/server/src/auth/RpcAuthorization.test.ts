@@ -333,7 +333,7 @@ describe("settings mutation authorization", () => {
         const client = yield* RpcTest.makeClient(group).pipe(
           Effect.provide(
             Layer.mergeAll(
-              group.toLayerHandler(WS_METHODS.serverUpdateSettings, () =>
+                group.toLayerHandler(WS_METHODS.serverUpdateSettings, () =>
                 Effect.sync(() => {
                   handled = true;
                   return DEFAULT_SERVER_SETTINGS;
@@ -624,11 +624,13 @@ it.effect("requires provider management to send /logout through chat", () =>
       ),
     );
     const handled: string[] = [];
-    const handler = group.toLayerHandler(ORCHESTRATION_V2_WS_METHODS.dispatchCommand, (command) =>
-      Effect.sync(() => {
-        handled.push(command.commandId);
-        return { sequence: 1 };
-      }),
+    const handler = Layer.mergeAll(
+      group.toLayerHandler(ORCHESTRATION_V2_WS_METHODS.dispatchCommand, (command) =>
+        Effect.sync(() => {
+          handled.push(command.commandId);
+          return { sequence: 1 };
+        }),
+      ),
     );
     const message = (commandId: string, text: string) => ({
       type: "message.dispatch" as const,

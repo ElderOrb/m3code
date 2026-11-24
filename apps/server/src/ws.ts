@@ -20,6 +20,7 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { rpcInitialItems } from "./rpcInitialItems.ts";
@@ -231,6 +232,11 @@ import * as DefectReporter from "./observability/DefectReporter.ts";
 import * as EventLoopMonitor from "./observability/EventLoopMonitor.ts";
 import * as BackgroundPolicy from "./background/BackgroundPolicy.ts";
 import * as EnvironmentAuth from "./auth/EnvironmentAuth.ts";
+import * as ServerE2eeIdentity from "./auth/ServerE2eeIdentity.ts";
+import {
+  classifyRequestTransport,
+  transportAllowedByPolicy,
+} from "./auth/transportSecurity.ts";
 import { requiredScopeForDeviceList, rpcAuthorizationError } from "./auth/RpcAuthorization.ts";
 import * as RpcAuthorization from "./auth/RpcAuthorization.ts";
 import * as ProcessDiagnostics from "./diagnostics/ProcessDiagnostics.ts";
@@ -263,6 +269,12 @@ import { failEnvironmentAuthInvalid, failEnvironmentInternal } from "./auth/http
 import * as SourceControlRateLimit from "@t3tools/source-control-core/server/SourceControlRateLimit";
 import { isNetworkPath } from "@t3tools/shared/path";
 import * as RelayClient from "@t3tools/shared/relayClient";
+import {
+  E2EE_REQUIRED_CODE,
+  SOCKET_E2EE_QUERY_PARAM,
+  layerE2eeCrypto,
+  wrapServerSocketWithE2ee,
+} from "@t3tools/shared/socketE2ee";
 import {
   SOCKET_FRAME_PARTS_QUERY_PARAM,
   splitLargeSocketFrames,
@@ -1467,6 +1479,33 @@ export const layerWsRpc = (
       const storageCleanup = yield* StorageCleanup.StorageCleanup;
       const databaseStorage = yield* DatabaseStorage.DatabaseStorage;
       const serverSettings = yield* ServerSettings.ServerSettingsService;
+      // Resolved once: the identity key only changes through an explicit rotate.
+      const e2eeIdentity = yield* Effect.serviceOption(ServerE2eeIdentity.ServerE2eeIdentity);
+      const e2eeIdentityDescriptor: Effect.Effect<
+        | Pick<
+            import("@t3tools/contracts").TransportSecurity,
+            "identityPublicKey" | "identityPublicKeyFingerprint"
+          >
+        | undefined,
+        never,
+        never
+      > = Option.isSome(e2eeIdentity)
+        ? Effect.map(
+            Effect.result(e2eeIdentity.value.getDescriptor),
+            (outcome) =>
+              Result.isSuccess(outcome)
+                ? {
+                    identityPublicKey: outcome.success.publicKeyBase64Url,
+                    identityPublicKeyFingerprint: outcome.success.fingerprint,
+                  }
+                : undefined,
+          )
+        : Effect.succeed<
+            Pick<
+              import("@t3tools/contracts").TransportSecurity,
+              "identityPublicKey" | "identityPublicKeyFingerprint"
+            > | undefined
+          >(undefined);
       const secretResolver = yield* SecretResolver.SecretResolver;
       const peerLinks = yield* PeerLinks.PeerLinks;
       const peerLinkRequests = yield* PeerLinkRequests.PeerLinkRequests;
@@ -1751,6 +1790,15 @@ export const layerWsRpc = (
           yield* serverSettings.getSettings,
           settingsClient,
         );
+        const e2eeIdentityKey = yield* e2eeIdentityDescriptor;
+        const transportSecurity: import("@t3tools/contracts").TransportSecurity | undefined =
+          e2eeIdentityKey === undefined
+            ? undefined
+            : {
+                ...e2eeIdentityKey,
+                remoteTransportPolicy: settings.remoteTransportPolicy,
+                e2eeMode: settings.e2eeMode,
+              };
         const environment = yield* serverEnvironment.getDescriptor;
         const auth = yield* serverAuth.getDescriptor();
         const scratchWorkspaceRoot = yield* managedFolders.scratchRoot;
@@ -1791,6 +1839,7 @@ export const layerWsRpc = (
           ...(serverSettings.managedPolicy === undefined
             ? {}
             : { managedPolicy: serverSettings.managedPolicy }),
+          ...(transportSecurity === undefined ? {} : { transportSecurity }),
           shellResumeCompletionMarker: true,
           shellThreadFamilies: true,
           threadLinkMetadata: true,
@@ -3470,6 +3519,10 @@ export const layer = Layer.unwrap(
     const peerLinks = yield* PeerLinks.PeerLinks;
     const peerLinkRequests = yield* PeerLinkRequests.PeerLinkRequests;
     const sql = yield* SqlClient.SqlClient;
+    const e2eeEnvironmentId = yield* Effect.flatMap(
+      ServerEnvironment.ServerEnvironment,
+      (serverEnvironment) => serverEnvironment.getEnvironmentId,
+    );
     return HttpRouter.add(
       "GET",
       "/ws",
@@ -3488,6 +3541,49 @@ export const layer = Layer.unwrap(
         }
         const serverAuth = yield* EnvironmentAuth.EnvironmentAuth;
         const sessions = yield* SessionStore.SessionStore;
+        // Transport policy runs before authentication: it describes how the
+        // peer reached the server, not who it claims to be.
+        const settingsService = yield* ServerSettings.ServerSettingsService;
+        const currentSettings = yield* settingsService.getSettings.pipe(Effect.orDie);
+        const transport = classifyRequestTransport(request);
+        if (!transportAllowedByPolicy(transport, currentSettings.remoteTransportPolicy)) {
+          return HttpServerResponse.jsonUnsafe(
+            {
+              code: "REMOTE_TRANSPORT_NOT_ALLOWED",
+              message:
+                "This host only accepts remote connections over private end-to-end-encrypted transports (Tailscale or SSH). Connect over one of those, or change the policy on the host.",
+              transport,
+            },
+            { status: 403 },
+          );
+        }
+        const e2eeRequested = url.value.searchParams.get(SOCKET_E2EE_QUERY_PARAM) === "1";
+        const e2eeIdentity = yield* Effect.serviceOption(ServerE2eeIdentity.ServerE2eeIdentity);
+        // A client asking for E2EE the server cannot offer must fail loudly:
+        // silently continuing in plaintext would defeat its pinned key.
+        if (
+          e2eeRequested &&
+          (currentSettings.e2eeMode === "off" || Option.isNone(e2eeIdentity))
+        ) {
+          return HttpServerResponse.jsonUnsafe(
+            {
+              code: "E2EE_NOT_SUPPORTED",
+              message:
+                "This host does not offer end-to-end encryption. Re-pair the environment from its host if you trust this change.",
+            },
+            { status: 403 },
+          );
+        }
+        if (!e2eeRequested && currentSettings.e2eeMode === "require" && transport !== "loopback") {
+          return HttpServerResponse.jsonUnsafe(
+            {
+              code: E2EE_REQUIRED_CODE,
+              message:
+                "This host requires end-to-end encryption for remote connections. Update M3 Code on this device to a release with E2EE support.",
+            },
+            { status: 403 },
+          );
+        }
         const session = yield* serverAuth.authenticateWebSocketUpgrade(request, "rpc").pipe(
           Effect.catchIf(EnvironmentAuth.isServerAuthCredentialError, (error) =>
             failEnvironmentAuthInvalid(
@@ -3563,25 +3659,38 @@ export const layer = Layer.unwrap(
             ),
           ),
         );
-        const framedRpcWebSocketHttpEffect = url.value.searchParams.has(
-          SOCKET_FRAME_PARTS_QUERY_PARAM,
-        )
-          ? rpcWebSocketHttpEffect.pipe(
-              Effect.provideService(
-                HttpServerRequest.HttpServerRequest,
-                // The RPC server upgrades the request itself, so its socket is
-                // wrapped through the request it reads.
-                Object.create(request, {
-                  upgrade: { value: Effect.map(request.upgrade, splitLargeSocketFrames) },
+        // The RPC server upgrades the request itself, so socket wrapping goes
+        // through the request it reads. E2EE sits outermost: its records are
+        // binary, so the frame splitter passes them through untouched.
+        const framedRequested = url.value.searchParams.has(SOCKET_FRAME_PARTS_QUERY_PARAM);
+        const e2eeActive =
+          e2eeRequested && currentSettings.e2eeMode !== "off" && Option.isSome(e2eeIdentity);
+        const baseUpgrade = framedRequested
+          ? Effect.map(request.upgrade, splitLargeSocketFrames)
+          : request.upgrade;
+        const upgradeEffect = e2eeActive
+          ? Effect.flatMap(baseUpgrade, (socket) =>
+              Effect.flatMap(Option.getOrThrow(e2eeIdentity).getKeypair, (keypair) =>
+                wrapServerSocketWithE2ee(socket, {
+                  environmentId: e2eeEnvironmentId,
+                  identitySeed: keypair.seed,
                 }),
               ),
             )
-          : rpcWebSocketHttpEffect;
+          : baseUpgrade;
+        const e2eeRpcWebSocketHttpEffect = rpcWebSocketHttpEffect.pipe(
+          Effect.provideService(
+            HttpServerRequest.HttpServerRequest,
+            Object.create(request, {
+              upgrade: { value: upgradeEffect },
+            }),
+          ),
+        );
         return yield* Effect.acquireUseRelease(
           sessions.markConnected(session.sessionId),
           () =>
             Effect.raceFirst(
-              framedRpcWebSocketHttpEffect,
+              e2eeRpcWebSocketHttpEffect,
               sessions.awaitInvalidation(session.sessionId, session.proofKeyThumbprint).pipe(
                 Effect.as(HttpServerResponse.empty()),
                 Effect.catchTags({
@@ -3600,4 +3709,9 @@ export const layer = Layer.unwrap(
       ),
     );
   }),
-).pipe(Layer.provide(NpmRelease.layer));
+).pipe(
+  Layer.provide(NpmRelease.layer),
+  // The E2EE socket wrap runs per upgrade and needs these services; providing
+  // them here keeps them out of every consumer of this layer.
+  Layer.provide(layerE2eeCrypto),
+);

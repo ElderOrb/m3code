@@ -5,6 +5,57 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: End-to-end encrypted remote control (transport guard + app-layer E2EE)
+
+Two complementary protections for remote control, both opt-in and additive (the official T3 Code
+mobile app keeps pairing and working; defaults are `remoteTransportPolicy: "any"` and
+`e2eeMode: "off"`).
+
+**Transport-level guard & visibility.**
+
+- New server setting `remoteTransportPolicy` (`any` | `private-e2ee-only`). `private-e2ee-only`
+  refuses remote WebSocket upgrades and authenticated HTTP requests classified as tunnel
+  (Cloudflare/T3 Connect: `cf-connecting-ip`, `cf-ray`), plain-LAN, or proxied-from-public,
+  answering only loopback (which includes SSH port-forwards) and Tailscale
+  (100.64.0.0/10 + `fd7a:115c:a1e0::/48`). Rejection is `403` with code
+  `REMOTE_TRANSPORT_NOT_ALLOWED` before authentication. Tunnels are also refused at the source:
+  T3 Connect tunnel start/recovery fails with `CloudLinkTransportPolicyError` while the policy is
+  on.
+- The policy can always be turned back off from a connected session (the running WebSocket is not
+  killed) or via `settings.json`, so a host cannot lock itself out.
+- Connection security badge: web, desktop, and mobile environment rows now show how the active
+  session is protected - `Local`, `E2EE (Tailscale / SSH)`, `E2EE` (app layer), `TLS only`, or
+  `Unencrypted` (`packages/client-runtime/src/connection/presentation.ts`).
+
+**Application-layer E2EE for the WebSocket RPC channel** (`packages/shared/src/socketE2ee.ts`).
+
+- The server owns a long-lived Ed25519 identity keypair (stored in `ServerSecretStore` as
+  `e2ee-identity-seed-v1`; delete that secret and restart to rotate - pinned clients then refuse
+  the old key). `ServerConfig.transportSecurity` advertises the policy, mode, public key
+  (base64url), and a `XXXX-XXXX-XXXX-XXXX` fingerprint.
+- Clients pin the key from the pairing link's new `pk` hash parameter (embedded by `t3 pair`, the
+  startup pairing URL, and the web pairing-URL builders) into the saved connection profile. On
+  connect they append `?e2ee=1` and run an authenticated ephemeral X25519 handshake: the server
+  signs the transcript with its identity key, the client verifies the signature AND the pin, then
+  both derive XChaCha20-Poly1305 record keys with HKDF-SHA256. Every later frame is a binary
+  record `[version][counter][ciphertext+tag]` with a strict monotonic counter - tampering, replay,
+  reordering, plaintext injection, wrong pinned key (`E2EE_IDENTITY_MISMATCH`), and
+  cross-environment transcripts all fail the socket. Fresh ephemerals per reconnect give forward
+  secrecy. XChaCha20-Poly1305 (Effect's vendored, audited `@noble/ciphers` implementation) was
+  chosen over AES-256-GCM because it runs on every surface, including mobile runtimes without
+  `crypto.subtle`.
+- New setting `e2eeMode` (`off` | `prefer` | `require`; default `off`). `prefer`: clients that pin
+  get E2EE, everything else keeps working (official mobile app compatible). `require`: remote
+  clients without `?e2ee=1` are refused with `403` code `E2EE_REQUIRED` (loopback excepted). A
+  client asking for E2EE the server cannot offer gets `403` code `E2EE_NOT_SUPPORTED` - never a
+  silent plaintext fallback. Settings UI (Connections): a "Private transports only" switch and an
+  "End-to-end encryption" switch showing the verified fingerprint; turning the encryption off from
+  the UI is intentionally blocked (pinned clients would break) - set `e2eeMode: "off"` in the
+  host's `settings.json` instead.
+- Known gaps: attachment/file HTTP endpoints are not covered by the app-layer tunnel (they remain
+  protected by the transport); the web/mobile "require" mode selection and a rotate-key button are
+  deferred - rotation today = delete `e2ee-identity-seed-v1` + restart.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,

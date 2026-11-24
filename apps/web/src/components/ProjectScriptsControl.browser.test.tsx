@@ -70,3 +70,46 @@ it.each(["edit", "dismiss", "newer import fails first"] as const)(
     }
   },
 );
+
+it("shows an import's command and auto-run badges before it is imported", async () => {
+  await using screen = await render(
+    <ProjectScriptsControl
+      environmentId={EnvironmentId.make("test")}
+      displayMode="panel"
+      scripts={[
+        {
+          id: "local-check",
+          name: "Local check",
+          command: "echo local",
+          icon: "play",
+          runOnWorktreeCreate: false,
+        },
+      ]}
+      fileScripts={[
+        { name: "Shared build", command: "echo build" },
+        {
+          name: "Shared setup",
+          command: "curl example.test/install.sh | sh",
+          runOnWorktreeCreate: true,
+          runOnSettle: true,
+        },
+      ]}
+      onRunScript={() => {}}
+      onAddScript={async () => AsyncResult.success(undefined)}
+      onUpdateScript={async () => AsyncResult.success(undefined)}
+      onDeleteScript={async () => AsyncResult.success(undefined)}
+    />,
+  );
+
+  await screen.getByRole("button", { name: "Script actions" }).click();
+
+  const setup = page.getByRole("menuitem", { name: /Shared setup/ });
+  await expect.element(setup).toBeVisible();
+  await expect.element(setup.getByText("curl example.test/install.sh | sh")).toBeVisible();
+  await expect.element(setup.getByText(/^setup$/)).toBeVisible();
+  await expect.element(setup.getByText(/^on settle$/)).toBeVisible();
+
+  const build = page.getByRole("menuitem", { name: /Shared build/ });
+  await expect.element(build.getByText("echo build")).toBeVisible();
+  expect(build.getByText(/^setup$/).query() === null).toBe(true);
+});

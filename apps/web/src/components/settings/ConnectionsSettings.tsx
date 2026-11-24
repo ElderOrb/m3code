@@ -1153,6 +1153,9 @@ function ConnectionsSettingsContent({
   ) => (
     <PairingClientsList
       servedByEnvironment={isPrimaryAccess}
+      serverIdentityKey={
+        accessServerConfig?.transportSecurity?.identityPublicKey ?? null
+      }
       endpointUrl={desktopServerExposureState?.endpointUrl}
       endpoints={visibleDesktopAdvertisedEndpoints}
       defaultEndpointKey={defaultDesktopAdvertisedEndpointKey}
@@ -1380,6 +1383,17 @@ function ConnectionsSettingsContent({
                     ? null
                     : {
                         required: accessServerConfig.settings.requireConnectDeviceApproval,
+                        canManage: canWriteAccess,
+                      }
+                }
+                transportSecurity={
+                  accessServerConfig?.settings.remoteTransportPolicy === undefined
+                    ? null
+                    : {
+                        policy: accessServerConfig.settings.remoteTransportPolicy,
+                        e2eeMode: accessServerConfig.settings.e2eeMode,
+                        fingerprint:
+                          accessServerConfig.transportSecurity?.identityPublicKeyFingerprint ?? null,
                         canManage: canWriteAccess,
                       }
                 }

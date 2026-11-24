@@ -71,6 +71,8 @@ const connectErrorCases = {
     Effect.fail(new EnvironmentHttpForbiddenError({ message: error.message })),
   CloudLinkInternalError: (error: CloudLink.CloudLinkInternalError) =>
     internalServerError(error, error.cause),
+  CloudLinkTransportPolicyError: (error: CloudLink.CloudLinkTransportPolicyError) =>
+    Effect.fail(new EnvironmentHttpForbiddenError({ message: error.message })),
   RelayRequestError: relayFailure,
 } as const;
 

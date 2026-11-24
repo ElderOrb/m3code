@@ -26,6 +26,7 @@ import {
   EMPTY_PROJECT_SCRIPT_INPUT,
   editorRequestForScript,
   ProjectScriptEditorDialog,
+  ProjectScriptFlags,
   ScriptIcon,
   type NewProjectScriptInput,
   type ProjectScriptActionResult,
@@ -38,6 +39,7 @@ import {
   MenuGroup,
   MenuGroupLabel,
   MenuItem,
+  MenuItemDetail,
   MenuItemLabel,
   MenuPopup,
   MenuSeparator,
@@ -189,8 +191,16 @@ export default function ProjectScriptsControl({
             onClick={() => void importFileScript(fileScript)}
           >
             <ScriptIcon icon={fileScript.icon ?? "play"} className="size-4" />
-            <MenuItemLabel>{fileScript.name}</MenuItemLabel>
-            <MenuShortcut>
+            <MenuItemLabel>
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span className="min-w-0 truncate">{fileScript.name}</span>
+                <ProjectScriptFlags script={fileScript} />
+              </span>
+            </MenuItemLabel>
+            <MenuItemDetail className="min-w-0 shrink">
+              <code className="block truncate font-mono text-xs">{fileScript.command}</code>
+            </MenuItemDetail>
+            <MenuShortcut className="ms-0">
               <DownloadIcon
                 className="size-3.5"
                 aria-label={gt("Import", { $context: "verb, import an action from t3.json" })}
