@@ -5,6 +5,10 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: Remove Antigravity undocumented internal API usage scraper
+
+- **Antigravity ToS compliance**: removed OS keyring / Windows Credential Manager OAuth token extraction, spoofed `antigravity/hub/2.24.0 (aidev_client; ...)` User-Agent, and undocumented `daily-cloudcode-pa.googleapis.com/v1internal:*` / `cloudcode-pa.googleapis.com/v1internal:*` quota calls from `apps/server/src/provider/antigravityUsageLimits.ts` and `apps/server/src/usage/cliproxyApi.ts`. The official `agy acp` agent driver remains intact.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
