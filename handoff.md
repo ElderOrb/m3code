@@ -1,5 +1,12 @@
 # Handoff — M3 Code fork
 
+> **E2EE work:** end-to-end encrypted remote control (transport guard +
+> app-layer WebSocket E2EE) landed in `f90618b2b3`. Read `E2EE_HANDOFF.md`
+> before touching `socketE2ee.ts`, the `/ws` upgrade path, the connection
+> settings UI, or anything that adds a requirement to `Ws.layer` / a tag to
+> `cloud/http.ts`'s error map — it documents a type-inference cascade that
+> otherwise looks like unrelated breakage.
+
 Snapshot of where this fork stands, what was done, and what the next agent or human needs to
 know. Read this before touching anything. Branch: `remove-all-telemetry` (pushed to
 `origin/main` as the default branch; local `main` tracks the same commits).
