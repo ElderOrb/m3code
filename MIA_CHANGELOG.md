@@ -5,6 +5,19 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-24: Open PRs merged (#4, #5, #6, #7, #8, #9) and the fallout of #3
+
+- **Merged**: #9 (inference gateway retry, usage meter and typecheck fixes), #6 (Antigravity
+  scraper removal), #7 (WireGuard / mesh endpoints), #8 (SQLite cache and mmap, V8 cache, macOS glass
+  fast path; the loopback WebSocket compression change was left out), #4 (Oh My Pi provider) and #5
+  (LLM Gateway text generator).
+- **Lockfile**: #3 left Clerk overrides in `pnpm-lock.yaml` and #4 added a workspace package with no
+  entry, so `--frozen-lockfile` installs failed. The lockfile is regenerated.
+- **Tests removed with the fetches they covered**: #3 dropped the usage price-table and model
+  manifest fetches but kept their tests. The fetch-behavior tests are gone and the usage tests seed
+  the local rates cache instead. Without a cached price table, usage cost figures stay empty.
+- **`upstream-http` failures now have advice text** in `InferenceDiagnostics`; the case was missing.
+
 ## 2026-11-24: E2EE follow-ups after the first live run
 
 - **The host now has an identity key.** `ServerE2eeIdentity.layer` was never provided in
