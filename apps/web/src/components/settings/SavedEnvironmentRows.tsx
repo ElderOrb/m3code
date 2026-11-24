@@ -938,19 +938,17 @@ export function TransportSecurityRows({
                   : gt("Your session does not have permission to manage access.")
               }
               onCheckedChange={(enabled) => {
-                // A pinned client refuses a server that stops offering E2EE,
-                // so turning it off is a two-step on the host, not a switch.
+                updateEnvironmentSettings({ e2eeMode: enabled ? "prefer" : "off" });
+                // A pinned client refuses a host that stops offering E2EE.
                 if (!enabled) {
                   toastManager.add({
                     type: "warning",
-                    title: gt("End-to-end encryption stays on"),
+                    title: gt("End-to-end encryption is off"),
                     description: gt(
-                      'To turn it off, set e2eeMode to "off" in the host\'s settings.json. Clients pin this key when they pair.',
+                      "Devices paired while it was on will not connect until you pair them again.",
                     ),
                   });
-                  return;
                 }
-                updateEnvironmentSettings({ e2eeMode: "prefer" });
               }}
             />
           }

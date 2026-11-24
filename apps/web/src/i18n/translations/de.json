@@ -2649,6 +2649,7 @@
   "ec77b26bbc2e556b": "Konfigurieren",
   "245c34b6a30df38f": "Build",
   "936ec164b44447a7": "Debuggen",
+  "f905637a69a1f15c": "Setup",
   "b6de9f6c872f6b74": "Diese Verbindung kann keine Projektaktionen ändern.",
   "7d02cd48e64e0686": "Diese Verbindung kann keine Tastenkürzel ändern.",
   "904dbe3e472aa364": "Name ist erforderlich.",
@@ -2657,6 +2658,7 @@
   "3d9c65aa19816623": "Symbol auswählen",
   "37c9f907a26798a5": "Test",
   "3f400d1470c76ff8": "Tastenkürzel drücken",
+  "b6153d9339da71e2": "beim Erledigen",
   "3bf42e08dad6483f": [
     "Aktion „",
     {
@@ -4937,7 +4939,6 @@
     },
     " und wähle dann „Aktualisieren“."
   ],
-  "6fa695d3a822bb9e": "Bei T3 Connect anmelden",
   "b28a147f66b0e088": "Verknüpfungsdatum nicht verfügbar",
   "6f0589fb1a5e38a9": "Verknüpft {date}",
   "ba921b079703d6d5": "Verwalteter Tunnel",
@@ -5886,6 +5887,7 @@
   "402ad504ab1fe6a4": "Verknüpft: {environments}",
   "9ec433045537acfc": "Erneut prüfen",
   "88f60e3d23ebcdd8": "T3 Connect wird geprüft…",
+  "6fa695d3a822bb9e": "Bei T3 Connect anmelden",
   "5492129175e04f8d": "Dein T3-Connect-Konto hat keine Tunnel mehr.",
   "f67523ac021fe845": [
     "Restart M3 Code on ",
@@ -8731,9 +8733,7 @@
     },
     " senden"
   ],
-  "f905637a69a1f15c": "Setup",
   "cb07d6a2663a0d1d": "Keine Aktionen konfiguriert.",
-  "b6153d9339da71e2": "beim Erledigen",
   "bb6cd3da051f9de8": "Vorschau · nur Desktop",
   "74a80f881d59c64d": "Befehle, die im Checkout dieses Projekts oder seinem Worktree laufen, mit optionalen Tastenkürzeln.",
   "b021ef2874c6c24b": "Unterschiedliche Aktionen in den Checkouts",
@@ -9385,8 +9385,8 @@
   "d19795bd29fffb06": "Updated clients encrypt the session itself and verify this fingerprint: {fingerprint}. The official mobile app still connects without it.",
   "00d4350c6358d871": "Every remote session is encrypted and verifies this fingerprint: {fingerprint}. Clients without E2EE support are refused.",
   "30b6d49e18aec697": "Remote-Sitzungen Ende-zu-Ende verschlüsseln",
-  "46a94010ca3f2015": "Ende-zu-Ende-Verschlüsselung bleibt aktiv",
-  "effb1ef4080107fe": "To turn it off, set e2eeMode to \"off\" in the host's settings.json. Clients pin this key when they pair.",
+  "2ca0869474e127b7": "Ende-zu-Ende-Verschlüsselung ist aus",
+  "2f842e66547c34af": "Geräte, die gekoppelt wurden, solange sie aktiv war, verbinden sich erst nach erneutem Koppeln wieder.",
   "b0b5de2fdc9514b5": "T3 Connect",
   "2c2a12fbdc300d03": "Um diese Einstellungen zu bearbeiten, kopple diese Verbindung mit den Berechtigungen „Relay anzeigen“ und „Relay verwalten“.",
   "3b3d299149f45c3d": "Klicke auf „Umgebung hinzufügen“, um eine weitere Umgebung zu koppeln, oder verbinde eine über T3 Connect.",

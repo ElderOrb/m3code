@@ -2648,6 +2648,7 @@
   "ec77b26bbc2e556b": "Konfigurera",
   "245c34b6a30df38f": "Bygg",
   "936ec164b44447a7": "Felsök",
+  "f905637a69a1f15c": "konfiguration",
   "b6de9f6c872f6b74": "Den här anslutningen kan inte ändra projektåtgärder.",
   "7d02cd48e64e0686": "Den här anslutningen kan inte ändra kortkommandon.",
   "904dbe3e472aa364": "Namn krävs.",
@@ -2656,6 +2657,7 @@
   "3d9c65aa19816623": "Välj ikon",
   "37c9f907a26798a5": "Test",
   "3f400d1470c76ff8": "Tryck på kortkommando",
+  "b6153d9339da71e2": "vid klar",
   "3bf42e08dad6483f": [
     "Ta bort åtgärden ”",
     {
@@ -4936,7 +4938,6 @@
     },
     " och välj sedan Uppdatera."
   ],
-  "6fa695d3a822bb9e": "Logga in på T3 Connect",
   "b28a147f66b0e088": "Länkdatumet är inte tillgängligt",
   "6f0589fb1a5e38a9": "Länkad {date}",
   "ba921b079703d6d5": "Hanterad tunnel",
@@ -5886,6 +5887,7 @@
   "402ad504ab1fe6a4": "Länkade: {environments}",
   "9ec433045537acfc": "Kontrollera igen",
   "88f60e3d23ebcdd8": "Kontrollerar T3 Connect…",
+  "6fa695d3a822bb9e": "Logga in på T3 Connect",
   "5492129175e04f8d": "Ditt T3 Connect-konto har slut på tunnlar.",
   "f67523ac021fe845": [
     "Restart M3 Code on ",
@@ -8738,9 +8740,7 @@
       "v": "v"
     }
   ],
-  "f905637a69a1f15c": "konfiguration",
   "cb07d6a2663a0d1d": "Inga åtgärder konfigurerade.",
-  "b6153d9339da71e2": "vid klar",
   "bb6cd3da051f9de8": "förhandsvisning · endast skrivbord",
   "74a80f881d59c64d": "Kommandon som körs i projektets utcheckning eller dess worktree, med valfria kortkommandon.",
   "b021ef2874c6c24b": "Olika åtgärder i olika utcheckningar",
@@ -9392,8 +9392,8 @@
   "d19795bd29fffb06": "Updated clients encrypt the session itself and verify this fingerprint: {fingerprint}. The official mobile app still connects without it.",
   "00d4350c6358d871": "Every remote session is encrypted and verifies this fingerprint: {fingerprint}. Clients without E2EE support are refused.",
   "30b6d49e18aec697": "Kryptera fjärrsessioner hela vägen",
-  "46a94010ca3f2015": "Krypteringen hela vägen är låst på",
-  "effb1ef4080107fe": "To turn it off, set e2eeMode to \"off\" in the host's settings.json. Clients pin this key when they pair.",
+  "2ca0869474e127b7": "Kryptering hela vägen är av",
+  "2f842e66547c34af": "Enheter som parkopplades medan den var på ansluter inte förrän du parkopplar dem igen.",
   "b0b5de2fdc9514b5": "T3 Connect",
   "2c2a12fbdc300d03": "Parkoppla den här anslutningen med både behörigheterna Visa relä och Hantera relä för att redigera de här inställningarna.",
   "3b3d299149f45c3d": "Klicka på ”Lägg till miljö” för att parkoppla en annan miljö, eller anslut en från T3 Connect.",

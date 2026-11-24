@@ -2647,6 +2647,7 @@
   "ec77b26bbc2e556b": "구성",
   "245c34b6a30df38f": "빌드",
   "936ec164b44447a7": "디버그",
+  "f905637a69a1f15c": "설정",
   "b6de9f6c872f6b74": "이 연결로는 프로젝트 작업을 변경할 수 없습니다.",
   "7d02cd48e64e0686": "이 연결로는 단축키를 변경할 수 없습니다.",
   "904dbe3e472aa364": "이름은 필수입니다.",
@@ -2655,6 +2656,7 @@
   "3d9c65aa19816623": "아이콘 선택",
   "37c9f907a26798a5": "테스트",
   "3f400d1470c76ff8": "단축키 누르기",
+  "b6153d9339da71e2": "정리 시",
   "3bf42e08dad6483f": [
     "작업 \"",
     {
@@ -4919,7 +4921,6 @@
     },
     "에서 확인한 다음 새로 고침을 선택하세요."
   ],
-  "6fa695d3a822bb9e": "T3 Connect에 로그인",
   "b28a147f66b0e088": "연결 날짜를 알 수 없음",
   "6f0589fb1a5e38a9": "{date}에 연결됨",
   "ba921b079703d6d5": "관리형 터널",
@@ -5868,6 +5869,7 @@
   "402ad504ab1fe6a4": "연결됨: {environments}",
   "9ec433045537acfc": "다시 확인",
   "88f60e3d23ebcdd8": "T3 Connect 확인 중…",
+  "6fa695d3a822bb9e": "T3 Connect에 로그인",
   "5492129175e04f8d": "T3 Connect 계정의 터널을 모두 사용했습니다.",
   "f67523ac021fe845": [
     "Restart M3 Code on ",
@@ -8696,9 +8698,7 @@
     },
     " 보내기"
   ],
-  "f905637a69a1f15c": "설정",
   "cb07d6a2663a0d1d": "구성된 작업이 없습니다.",
-  "b6153d9339da71e2": "정리 시",
   "bb6cd3da051f9de8": "미리 보기 · 데스크톱 전용",
   "74a80f881d59c64d": "이 프로젝트의 체크아웃 또는 워크트리에서 실행되는 명령입니다. 단축키를 지정할 수 있습니다.",
   "b021ef2874c6c24b": "체크아웃마다 작업이 다릅니다",
@@ -9347,8 +9347,8 @@
   "d19795bd29fffb06": "Updated clients encrypt the session itself and verify this fingerprint: {fingerprint}. The official mobile app still connects without it.",
   "00d4350c6358d871": "Every remote session is encrypted and verifies this fingerprint: {fingerprint}. Clients without E2EE support are refused.",
   "30b6d49e18aec697": "원격 세션을 종단간으로 암호화",
-  "46a94010ca3f2015": "종단간 암호화는 유지됩니다",
-  "effb1ef4080107fe": "To turn it off, set e2eeMode to \"off\" in the host's settings.json. Clients pin this key when they pair.",
+  "2ca0869474e127b7": "종단 간 암호화가 꺼져 있습니다",
+  "2f842e66547c34af": "켜져 있는 동안 페어링한 기기는 다시 페어링할 때까지 연결되지 않습니다.",
   "b0b5de2fdc9514b5": "T3 Connect",
   "2c2a12fbdc300d03": "이 설정을 편집하려면 릴레이 보기 및 릴레이 관리 권한을 모두 사용해 이 연결을 페어링하세요.",
   "3b3d299149f45c3d": "다른 환경을 페어링하려면 “환경 추가”를 클릭하거나 T3 Connect에서 연결하세요.",
