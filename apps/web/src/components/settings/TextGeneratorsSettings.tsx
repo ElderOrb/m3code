@@ -314,7 +314,7 @@ function TextGeneratorWizard({
   const showBaseUrl =
     existing === null
       ? preset.id === "custom"
-      : !["openai", "anthropic", "openrouter"].includes(textGeneratorBrand(existing));
+      : !["openai", "anthropic", "openrouter", "llmgateway"].includes(textGeneratorBrand(existing));
   const canConnect = keyValid && Option.isSome(config) && (!keyRequired || apiKey !== "");
   const name = Option.isSome(config)
     ? textGeneratorDisplayName(config.value, messages)

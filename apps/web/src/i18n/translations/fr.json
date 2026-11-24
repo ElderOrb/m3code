@@ -11500,7 +11500,6 @@
   "ad371af21e5b4b01": "Fournisseurs d’utilisation",
   "9d9d31a4f3d5ff69": "sources d’utilisation CLIProxyAPI proxy CLI hub quota abonnement limites clé de gestion ajouter supprimer",
   "d65fa0946585b245": "Générateurs de texte",
-  "e6fd69a8a3bb69e2": "modèle api clé d’api openai openrouter anthropic ollama lm studio point de terminaison personnalisé url de base titres de fils messages de commit",
   "f2b07faba1229ce7": "Intervalle de vérification de l’état",
   "5c9dc9970db79fe2": "actualiser disponibilité versions état d’authentification modèles sondes en arrière-plan secondes désactivé",
   "056ba6a180d114b5": "autoriser désactiver activer ouvrir piloter aperçu outils sessions remplacement par projet",
@@ -12098,5 +12097,6 @@
   "27d76249d09eb69f": "Guide de revue prêt",
   "faa3bb26abb39c93": "Échec du guide de revue",
   "b7df38b7d8792d78": "Ouvrir le guide",
-  "9e91e9a77b664e4e": "Impossible de démarrer un guide de revue"
+  "9e91e9a77b664e4e": "Impossible de démarrer un guide de revue",
+  "5e85e163a59abec5": "modèle api clé d’api openai openrouter llm gateway anthropic ollama lm studio point de terminaison personnalisé url de base titres de fils messages de commit"
 }

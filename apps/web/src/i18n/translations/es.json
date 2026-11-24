@@ -11496,7 +11496,6 @@
   "ad371af21e5b4b01": "Proveedores de uso",
   "9d9d31a4f3d5ff69": "fuentes de uso CLIProxyAPI proxy de CLI hub cuota suscripción límites gestión clave añadir quitar",
   "d65fa0946585b245": "Generadores de texto",
-  "e6fd69a8a3bb69e2": "modelo api clave de api openai openrouter anthropic ollama lm studio endpoint personalizado url base títulos de hilos mensajes de commit",
   "f2b07faba1229ce7": "Intervalo de comprobación de estado",
   "5c9dc9970db79fe2": "actualizar disponibilidad versiones estado de autenticación modelos sondeos en segundo plano segundos desactivado",
   "056ba6a180d114b5": "permitir desactivar activar abrir controlar herramientas de vista previa sesiones proyecto anulación",
@@ -12094,5 +12093,6 @@
   "27d76249d09eb69f": "Guía de revisión lista",
   "faa3bb26abb39c93": "Falló la guía de revisión",
   "b7df38b7d8792d78": "Abrir guía",
-  "9e91e9a77b664e4e": "No se pudo iniciar una guía de revisión"
+  "9e91e9a77b664e4e": "No se pudo iniciar una guía de revisión",
+  "5e85e163a59abec5": "modelo api clave de api openai openrouter llm gateway anthropic ollama lm studio endpoint personalizado url base títulos de hilos mensajes de commit"
 }

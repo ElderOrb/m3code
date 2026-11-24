@@ -120,6 +120,14 @@ Fixed runtime and typecheck bugs on `main`:
 - **New `@t3tools/provider-omp` package**: first-class OMP (`omp --mode rpc`) provider reusing `@t3tools/provider-pi`'s JSONL RPC adapter and status/text-generation/usage engine with OMP defaults (`driver: "omp"`, `binaryPath: "omp"`, `~/.omp/agent/sessions` usage transcripts, `DO_NOT_TRACK=1`, zero trackers).
 - **Auto-detection & multi-surface wiring**: auto-enables `omp` when `omp` is on `PATH`, added to `packages/contracts`, `packages/client-runtime`, `apps/server`, `apps/web`, and `apps/mobile` (model picker, local model setup, custom model editor, and usage dashboard).
 
+## 2026-11-24: LLM Gateway text generator
+
+**Settings → Providers → Text generators → Add generator** lists **LLM Gateway** next to
+OpenRouter: enter an [LLM Gateway](https://llmgateway.io) key to use any model it serves for thread
+titles, commit messages, pull request text, branch names and voice cleanup. It is the existing
+OpenAI-compatible generator with the base URL filled in (`https://api.llmgateway.io/v1`) and its
+own icon. Nothing changes on the server or in the protocol.
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
