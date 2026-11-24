@@ -51,3 +51,9 @@ node_modules/
 .pnpm-store/
 
 /packages/ssh/.ssh-launcher-test-*/
+
+# Agent handoff notes stay local.
+/handoff.md
+/E2EE_HANDOFF.md
+/docs/handoffs/
+/plan.md

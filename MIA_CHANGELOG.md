@@ -17,8 +17,7 @@ the official T3 Code mobile app keeps working against this fork's server.
 - **E2EE can be turned off from the UI**, with a warning that devices paired while it was on must
   pair again.
 - **Script-import hardening** (shipped inside the E2EE commit): the t3.json import menu shows each
-  script's command and its `setup` / `on settle` badges before you import it. See
-  `docs/handoffs/2026-11-24-t3json-script-import-hardening.md`.
+  script's command and its `setup` / `on settle` badges before you import it.
 - **Guide**: README section and `docs/user/encrypted-remote-control.md`.
 - **PR #3 merged**: Clerk, Expo OTA and the background upstream fetches are gone; the merge also
   fixed the desktop startup layer, a mobile type, and a relay test it had left failing.
