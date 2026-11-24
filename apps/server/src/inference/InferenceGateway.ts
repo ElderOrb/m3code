@@ -455,16 +455,18 @@ const make = Effect.gen(function* () {
     let upstreamHttpStatus: number | null = null;
     let failureSignal: InferenceDiagnostics.InferenceSignal = "unknown";
     let progressed = false;
-    const meter = makeUsageMeter(
-      protocol!,
-      prepared.streaming,
-      watching
-        ? (channel, text) => {
-            progressed = true;
-            pendingStop ??= watchdog.onDelta(channel, text);
-          }
-        : undefined,
-    );
+    const createMeter = () =>
+      makeUsageMeter(
+        protocol!,
+        prepared.streaming,
+        watching
+          ? (channel, text) => {
+              progressed = true;
+              pendingStop ??= watchdog.onDelta(channel, text);
+            }
+          : undefined,
+      );
+    let meter = createMeter();
     const stopSignal = yield* Deferred.make<WatchdogReason>();
     // "finished" once the reply has ended on its own, so a late idle tick cannot stop it.
     const stoppedFor = yield* Ref.make<WatchdogReason | "finished" | undefined>(undefined);
@@ -585,8 +587,10 @@ const make = Effect.gen(function* () {
     let retryBody = prepared.body;
     let retried = false;
     let bufferedReply: Uint8Array | undefined;
-    for (const [index, target] of plan.success.entries()) {
-      const next = plan.success[index + 1];
+    const targets = [...plan.success];
+    for (let index = 0; index < targets.length; index += 1) {
+      const target = targets[index]!;
+      const next = targets[index + 1];
       if (next !== undefined && !target.ready) continue;
       yield* Ref.set(served, { serverId: target.serverId, fallbackFrom: target.fallbackFrom });
       const attempt = yield* Scope.fork(lifetime);
@@ -631,7 +635,7 @@ const make = Effect.gen(function* () {
           }
           const raw = new Uint8Array(buffered.success);
           meter.push(raw);
-          meter.finish();
+          const attemptUsage = meter.finish();
           if (raw.length > 1024 * 1024) {
             bufferedReply = raw;
             break;
@@ -648,8 +652,9 @@ const make = Effect.gen(function* () {
           }
           yield* Scope.close(attempt, Exit.void);
           const completedAt = yield* Clock.currentTimeMillis;
+          const attemptRequestId = yield* random.uuidV4();
           yield* requestLog.record({
-            requestId,
+            requestId: attemptRequestId,
             serverId: target.serverId,
             model: prepared.model,
             threadId: caller.threadId ?? null,
@@ -666,10 +671,10 @@ const make = Effect.gen(function* () {
             decodeMs: null,
             durationMs: completedAt - receivedAt,
             upstreamHttpStatus,
-            ...meter.finish(),
+            ...attemptUsage,
           });
-          const nextTarget = { ...target, index: index + 1, ready: true };
-          plan.success.push(nextTarget);
+          targets.splice(index + 1, 0, { ...target, ready: true });
+          meter = createMeter();
           retryBody = nextBody;
           retried = true;
           continue;
@@ -697,7 +702,6 @@ const make = Effect.gen(function* () {
       yield* finish("failed");
       return errorResponse(502, "upstream_error", "The inference server answered with a redirect.");
     }
-    upstreamHttpStatus = upstream.status;
     const succeeded = upstream.status < 400;
     if (watching && succeeded) {
       yield* Ref.set(lastProgressAt, (yield* Ref.get(milestones)).dispatchedAt ?? receivedAt);
@@ -761,7 +765,7 @@ const make = Effect.gen(function* () {
         Ref.get(stoppedFor).pipe(
           Effect.flatMap((reason) =>
             reason !== undefined && reason !== "finished"
-              ? recordStop(reason).pipe(Effect.andThen(finish("failed")))
+              ? recordStop(reason).pipe(Effect.andThen(finish("failed", "watchdog", reason)))
               : finish(
                   Exit.isSuccess(exit)
                     ? succeeded

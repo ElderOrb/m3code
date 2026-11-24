@@ -80,6 +80,26 @@ mobile app keeps pairing and working; defaults are `remoteTransportPolicy: "any"
 - **Removed background upstream catalog & pricing fetches**: `ModelManifest` now serves only the bundled manifest (no fetch to `raw.githubusercontent.com/pingdotgg/t3code`), and `UsageService` loads only locally cached rates (no fetch to `raw.githubusercontent.com/BerriAI/litellm` or `api.github.com`).
 - **Orphaned telemetry i18n strings & dead references**: removed 10 unused OTLP/trace-diagnostics translation keys across all 10 web locales, 3 unused crash-report translation keys across all 10 mobile locales, dead `OtlpEndpointCheck.test.ts` shard weight, dead `RpcInstrumentation.ts` doc link, and stale client-analytics test comment.
 
+## 2026-11-24: Fix pre-existing inference gateway, retry, and typecheck bugs
+
+Fixed runtime and typecheck bugs on `main`:
+
+- `apps/server/src/inference/inferenceUsage.ts`: fixed `ReferenceError: sawContent is not defined`
+  in top-level `readBody()` and properly parsed non-streaming response bodies across OpenAI
+  chat/completions, Responses, and Anthropic Messages so valid non-streaming replies are no longer
+  misclassified as empty and spuriously retried.
+- `apps/server/src/inference/InferenceGateway.ts`: fixed retry target mutation of readonly
+  `plan.success` (insert retry immediately on a mutable copy without bogus `index` property),
+  reset the usage meter before retrying, use a fresh `requestId` for the failed pre-retry log row
+  to avoid `inference_requests.request_id` primary-key collisions, and pass the watchdog stop
+  reason to `finish("failed", "watchdog", reason)` so mid-stream watchdog stops record
+  `watchdog-*` instead of `unknown`.
+- `apps/server/src/inference/InferenceRetry.ts`: guarded `rejectedField` against non-object
+  request bodies (`null`, arrays, primitives) instead of throwing `TypeError` on `in`.
+- `apps/server/src/mcp/advertisedJsonSchema.test.ts` & `apps/mobile/src/Stack.tsx`: fixed
+  pre-existing typecheck errors (`workspaceStrategy` schema narrowing and extra argument to
+  0-arg `settingsPage()`).
+
 ## 2026-11-24: Updated M3 box icon
 
 Compressed the updated `m3-code-box.png` at full resolution (1254×1254, 1.04 MB → 20.6 KB,
